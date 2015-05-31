@@ -192,7 +192,7 @@ print.awsCluster <- function(r){
                      }))
     grp <- aws.list.groups(r)
     gtext <- if(length(grp)>0){
-        sprintf("Number of Instance Groups: %s\n%s\n", length(grp),paste(unlist(lapply(grp,function(s){
+        sprintf("Number of Instance Groups: %s\n%s", length(grp),paste(unlist(lapply(grp,function(s){
                    if(s$Market=="SPOT" && s$RequestedInstanceCount>0){
                        sprintf("\tID:%s, name: '%s' state:%s requested:%s (at $%s), running: %s", s$Id,s$Name,s$Status$State,
                                s$RequestedInstanceCount, s$BidPrice, s$RunningInstanceCount)
@@ -204,7 +204,7 @@ print.awsCluster <- function(r){
     }else ""
     awsconsole=sprintf("https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:%s",r$Id)
     temp <- infuse("Cluster ID: {{clid}}
-This Information As of: {{dd}}
+This Information As of: {{dd}} secs ago
 Name: '{{name}}'
 State: {{state}}
 Started At : {{started}}
@@ -219,7 +219,7 @@ Core Nodes: {{nworker}} of  {{ workerstype }}
 {{gtext}}
 
 {{awsconsole}}
-",list(clid=r$Id, dd=r$timeupdated,name=name, state=state, started=started, currently=currently, dns=dns, master=master['type'], isrunning=as.logical(master['running']), nworker=workers.core$'running', workerstype=workers.core$type,gtext=gtext,awsconsole=awsconsole))
+",list(clid=r$Id, dd=Sys.time() - r$timeupdated,name=name, state=state, started=started, currently=currently, dns=dns, master=master['type'], isrunning=as.logical(master['running']), nworker=workers.core$'running', workerstype=workers.core$type,gtext=gtext,awsconsole=awsconsole))
     cat(temp)
 }
 
@@ -288,7 +288,7 @@ aws.spot.price <- function(type=as.character(options("mzaws")[[1]]$inst.type['wo
 #' \code{groupid} and \code{n} set to 0.
 #' @export
 aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaws")[[1]]$inst.type['worker'])
-                            , spotPrice = NULL,name=sprintf("Group: %s", strftime(Sys.time(),"%Y-%m-%d:%H:%M"))){
+                            , spotPrice = NULL,name=NULL){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     n <- max(n,0)
@@ -298,7 +298,7 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
         return(aws.clus.info(cl))
     }
     if(is.character(spotPrice) && spotPrice=="ondemand"){
-        name= sprintf("On Demand %s", name)
+        name= if(is.null(name)) sprintf("On Demand %s", sprintf("Group: %s", strftime(Sys.time(),"%Y-%m-%d:%H:%M"))) else name
         spotq=""
     }else{
         if(is.null (spotPrice)){
@@ -307,7 +307,7 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
         }else p <- spotPrice
         p <- as.character(round(p,3))
         spotq <- sprintf("BidPrice=%s,", p)
-        name= sprintf("Spot %s", name)
+        name= if(is.null(name)) sprintf("Spot %s", name) else name
     }
     temp=infuse("{{awscli}} emr add-instance-groups --cluster-id  {{clid}} --instance-groups InstanceCount={{n}},{{spotq}}InstanceGroupType=task,InstanceType={{mtype}},Name='{{foo}}'", awscli=awsOpts$awscli,clid=cl$Id,n=as.integer(n),spotq=spotq, mtype=as.character(type),foo=name)
     l <- presult(system(temp,intern=TRUE))
@@ -317,13 +317,13 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
 #' List the Instance group nodes (Task and Spot nodes)
 #' @param cl is the once again the object from \code{aws.clus.create}
 #' @export
-aws.list.groups <- function(cl){
+aws.list.groups <- function(cl,reqGt0=TRUE){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     Map(function(s) {
-            s
-        },Filter(function(s) s$InstanceGroupType=="TASK", cl$InstanceGroups))
+        s 
+        },Filter(function(s) s$InstanceGroupType=="TASK" & s$RequestedInstanceCount>0, cl$InstanceGroups))
 }
 
 #' Returns AWS options

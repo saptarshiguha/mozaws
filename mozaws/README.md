@@ -100,13 +100,36 @@ We can add on-demand nodes and spot nodes.
     Master Type: c3.2xlarge (and is running: TRUE)
     Core Nodes: 1 of  c3.2xlarge
     Number of Instance Groups: 2
-        ID:ig-W84RQA8PLUR9, name: 'Spot Group: 2015-05-31:14:41' state:PROVISIONING requested:1 (at $0.077), running: 0
-        ID:ig-2UQ1SUVODUBJX, name: 'On Demand Group: 2015-05-31:14:41' state:RESIZING requested:1, running: 0
+        ID:ig-W84RQA8PLUR9, name: 'Spot1' state:PROVISIONING requested:1 (at $0.077), running: 0
+        ID:ig-2UQ1SUVODUBJX, name: 'DMD1' state:RESIZING requested:1, running: 0
      
     https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:j-24XY7LVL8TZL9
     
 
-We can delete that costly On-Demand group and add one more spot node.
+We can delete that costly On-Demand group ($0.420/hr) and add one more spot node.
 
+    grps <- aws.list.groups(cl)
+    idtodel <- Filter(function(s) s$Name=="DMD1", grps)[[1]]$Id
+    cl <- aws.modify.groups(cl, n=0, groupid=idtodel)
+    cl <- aws.modify.groups(cl, n=2, groupid=Filter(function(s) s$Name=="Spot1", grps)[[1]]$Id)
+    cl
+    Cluster ID: j-24XY7LVL8TZL9
+    This Information As of: 2015-05-31 15:03:20
+    Name: 'sguha cluster: 2'
+    State: WAITING
+    Started At : 2015-05-31 14:09:51
+    Message: Waiting after step failed
+    IP: ec2-52-26-3-44.us-west-2.compute.amazonaws.com
+    SOCKS: ssh -ND 8157 hadoop@ec2-52-26-3-44.us-west-2.compute.amazonaws.com (and use FoxyProxy for Firefox or SwitchySharp for Chrome)
+    Rstudio: http://ec2-52-26-3-44.us-west-2.compute.amazonaws.com
+    Shiny: http://ec2-52-26-3-44.us-west-2.compute.amazonaws.com:3838
+    JobTrakcer: http://ec2-52-26-3-44.us-west-2.compute.amazonaws.com:9026 (needs a socks)
+    Master Type: c3.2xlarge (and is running: TRUE)
+    Core Nodes: 1 of  c3.2xlarge
+    Number of Instance Groups: 1
+        ID:ig-CQB9ZB9PNQPH, name: 'Spot1' state:RESIZING requested:2 (at $0.076), running: 0
+
+## Running Scripts (e.g. adding R packages) Across All the Nodes
+
+     
     
-    cl <- aws.modify.groups(cl, n=0, groupid=
