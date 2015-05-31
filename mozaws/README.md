@@ -106,4 +106,7 @@ We can add on-demand nodes and spot nodes.
     https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:j-24XY7LVL8TZL9
     
 
-We can delete that costly On-Demand group and add one more spot node. 
+We can delete that costly On-Demand group and add one more spot node.
+
+    
+    cl <- aws.modify.groups(cl, n=0, groupid=
