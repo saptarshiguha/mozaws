@@ -193,10 +193,10 @@ print.awsCluster <- function(r){
     grp <- aws.list.groups(r)
     gtext <- if(length(grp)>0){
         sprintf("Number of Instance Groups: %s\n%s\n", length(grp),paste(unlist(lapply(grp,function(s){
-                   if(s$Market=="SPOT"){
+                   if(s$Market=="SPOT" && s$RequestedInstanceCount>0){
                        sprintf("\tID:%s, name: '%s' state:%s requested:%s (at $%s), running: %s", s$Id,s$Name,s$Status$State,
                                s$RequestedInstanceCount, s$BidPrice, s$RunningInstanceCount)
-                   }else{
+                   }else if(s$RequestedInstanceCount>0){
                        sprintf("\tID:%s, name: '%s' state:%s requested:%s, running: %s", s$Id,s$Name,s$Status$State,
                                s$RequestedInstanceCount, s$RunningInstanceCount)
                    }
@@ -305,7 +305,7 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
             p <- quantile(aws.spot.price(type=type, hrsInPast=0.30)$SpotPrice,0.8)
             message(sprintf("Using a spot price of %s", p))
         }else p <- spotPrice
-        p <- as.character(round(p,2))
+        p <- as.character(round(p,3))
         spotq <- sprintf("BidPrice=%s,", p)
         name= sprintf("Spot %s", name)
     }
