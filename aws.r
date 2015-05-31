@@ -178,7 +178,7 @@ print.awsCluster <- function(r){
                    }
                })),collapse="\n"))
     }else ""
-        
+    awsconsole=sprintf("https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:%s",r$Id)
     temp <- infuse("Cluster ID: {{clid}}
 This Information As of: {{dd}}
 Name: '{{name}}'
@@ -193,7 +193,9 @@ JobTrakcer: http://{{dns}}:9026 (needs a socks)
 Master Type: {{master}} (and is running: {{isrunning}})
 Core Nodes: {{nworker}} of  {{ workerstype }}
 {{gtext}}
-",list(clid=r$Id, dd=r$timeupdated,name=name, state=state, started=started, currently=currently, dns=dns, master=master['type'], isrunning=as.logical(master['running']), nworker=workers.core$'running', workerstype=workers.core$type,gtext=gtext))
+
+{{awsconsole}}
+",list(clid=r$Id, dd=r$timeupdated,name=name, state=state, started=started, currently=currently, dns=dns, master=master['type'], isrunning=as.logical(master['running']), nworker=workers.core$'running', workerstype=workers.core$type,gtext=gtext,awsconsole=awsconsole))
     cat(temp)
 }
 
