@@ -39,7 +39,7 @@ presult <- function(s){
 #' @param workers defines the workers, see details
 #' @param master defines master , see details
 #' @param hadoopops options that overide 'hadoopops' from options("mzaws")[[1]]
-#' @param timeout over timeout from the options
+#' @param timeout over timeout from the options (minutes)
 #' @param verbose be catty?
 #' @param emrfs turns on emrfs and consistency
 #' @param customscript override options

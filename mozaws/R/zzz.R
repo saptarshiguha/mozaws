@@ -2,6 +2,7 @@ library(devtools)
 library(rjson)
 library(data.table)
 
+.onLoad <- function(libname, pkgname) {
 options(mzaws=list(
             init       = FALSE,
             awscli     = "aws",
@@ -35,3 +36,4 @@ tryCatch({
     library(infuser)
 })
 
+}
