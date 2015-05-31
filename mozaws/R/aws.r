@@ -1,6 +1,3 @@
-library(devtools)
-library(rjson)
-library(data.table)
 
 tryCatch({
     library(infuser)
@@ -10,31 +7,18 @@ tryCatch({
     library(infuser)
 })
 
-
-options(mzaws=list(
-            init       = FALSE,
-            awscli     = "aws",
-            amiversion = "3.6.0",
-            timeout    = "2880",
-            loguri     = "s3://mozillametricsemrscripts/logs",
-            numworkers = 3,
-            numcreated = 0,
-            localpubkey= NA,
-            ec2key     = NA,
-            customscript = NA,
-            hadoopops  = c(
-                c("-y","yarn.resourcemanager.scheduler.class=org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler"),
-                c("-c","fs.s3n.multipart.uploads.enabled=true"),
-                c("-c","fs.s3n.multipart.uploads.split.size=524288000"),
-                c("-m","mapred.reduce.tasks.speculative.execution=false"),
-                c("-m","mapred.map.tasks.speculative.execution=false"),
-                c("-m","mapred.map.child.java.opts=-Xmx1024m"),
-                c("-m","mapred.reduce.child.java.opts=-Xmx1024m"),
-                c("-m","mapred.job.reuse.jvm.num.tasks=1")),
-            inst.type  = c(worker="c3.xlarge",master="c3.xlarge"))
-        )
         
-
+#' Initialize the AWS System
+#' @param ec2key this is your EC2 key that you created in the EC2 AWS Console
+#' @param localpubkey this is for example the contents of ~/.ssh/id_dsa.pub and if provided makes ssh'ing into the cluster easier
+#' @param optsmore more options that override the options
+#' @details \code{optsmore} can be used to override the values in options("mzaws")[[1]]. If you don't provide the EC2 key, this package will find the first available key 
+#' @examples
+#' \dontrun{
+#' aws.init(localpub="~/.ssh/id_dsa.pub")
+#' aws.init(localpub="~/.ssh/id_dsa.pub",optsmore=list(customscript='https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh'))
+#' }
+#' @export
 aws.init <- function(ec2key=NULL,localpubkey=NULL,optsmore=NULL){
     opts <- options("mzaws")[[1]]
     if(is.null(ec2key)){
@@ -59,9 +43,36 @@ presult <- function(s){
     fromJSON(paste(s,collapse="\n"))
 }
 
-
+#' Create a cluster
+#' @param name is the name of the cluster, if not provided one will be created for you
+#' @param workers defines the workers, see details
+#' @param master defines master , see details
+#' @param hadoopops options that overide 'hadoopops' from options("mzaws")[[1]]
+#' @param timeout over timeout from the options
+#' @param verbose be catty?
+#' @param emrfs turns on emrfs and consistency
+#' @param customscript override options
+#' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
+#' @details The arguments \code{hadoopops, timeout, customscript} can
+#' also be set in options. If \code{wait} is FALSE, the function will
+#' return immediately and can be monitored using
+#' \code{aws.clus.wait}. If \code{workers} is a number, then the type
+#' is taken from options("mzaws")[[1]]. If a string, this corresponds
+#' to the instance type and the number is taken from
+#' options("mzaws")[[1]]$numworkers. If a list, it needs to of the
+#' form \code{list(number, type)}. For \code{master}, it is enough to
+#' leave as NULL (and will be inferred from options) or you pass a
+#' type. The \code{timeout} is a set number of hours after which the
+#' cluster is killed. You'll thank me later.
+#' @examples
+#' \dontrun{
+#' s <- aws.clus.create(workers=1,wait=TRUE,customscript='https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh')
+#' s <- aws.clus.create(workers=1)
+#' s <- aws.clus.wait(s) 
+#' }
+#' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,customscript=options("mzaws")[[1]]$customscript,wait=FALSE){
+                           ,customscript=NULL,wait=FALSE){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     getWT <- function(s,k){
@@ -75,6 +86,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
             existingalready <- existingalready+1
             name <- sprintf("%s cluster: %s", Sys.info()[["user"]], existingalready+1)
     }
+    if(is.null(customscript)) customscript <- options("mzaws")[[1]]$customscript
     workers <- getWT(workers,"worker")
     master <- getWT(master,"master")
     hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
@@ -102,11 +114,17 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     }
 }
 
+#' Converts a cluster-id string into a cluster object
+#' @param clusterid is the id string
+#' @param name some name you want to give
+#' @export
 as.awsCluster <- function(clusterid,name=NA){
     if(is.character(clusterid)) structure(list(Id=clusterid, Name=name),class="awsCluster")
     else structure(clusterid, class="awsCluster")
 }
-
+#' Kills/Terminates the cluster
+#' @param cluster object (from \code{aws.clus.create}, \code{aws.clus.info})
+#' @export
 aws.kill <- function(clusters){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
@@ -116,6 +134,16 @@ aws.kill <- function(clusters){
     system(template,intern=TRUE)
 }
 
+#' Waits for the cluster to start
+#' @param clusters is an object obtained from \code{aws.clus.create}
+#' @param mon.sec polling interval
+#' @param silent chatty?
+#' @return the cluster object. Save it.
+#' @examples
+#' \dontrun{
+#'   s = aws.clus.wait(s)
+#' }
+#' @export
 aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
@@ -134,6 +162,10 @@ aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
     aws.clus.info(ac)
 }
 
+#' Describes the cluster
+#' @param cl is what is returned from \code{aws.clus.create} or \code{aws.clus.wait}
+#' @return an object of awsCluster. Very detailed object. Save it.
+#' @export
 aws.clus.info <- function(cl){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
@@ -199,7 +231,13 @@ Core Nodes: {{nworker}} of  {{ workerstype }}
     cat(temp)
 }
 
-aws.script.wait <- function(cl, s,verb=TRUE,mon.sec=5){
+#' Waits for a script to run
+#' @param cl is the cluster object returned from \code{aws.clus.create} and friends
+#' @param s is the script id, which you will find in \code{aws.clus.info()$steps} (most recent first)
+#' @param verb be chatty?
+#' @details This function will return once the step has finished
+#' @export
+aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
@@ -215,17 +253,25 @@ aws.script.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     }
 }
 
-aws.script.run <- function(cl,script,wait=TRUE){
+#' Run a step
+#' @param cl is a cluster object returned by \code{aws.clus.create} and friends
+#' @param script is a URL (not a file name!, something like http://) to download and run. E.g. an Rscript file
+#' @export
+aws.step.run <- function(cl,script,wait=TRUE){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     temp=infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://mozillametricsemrscripts/run.user.script.sh','{{scripturl}}']", cid=cl$Id,awscli=awsOpts$awscli, scripturl=script)
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
-    if(wait) aws.script.wait(cl,x) else cl
+    if(wait) aws.step.wait(cl,x) else cl
 }
 
-
+#' Get Spot Prices
+#' @param type the type of the worker
+#' @param hrsInPast prices since when as of now
+#' @return a data table with prices
+#' @export
 aws.spot.price <- function(type=as.character(options("mzaws")[[1]]$inst.type['worker']), hrsInPast=6){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
@@ -237,6 +283,18 @@ aws.spot.price <- function(type=as.character(options("mzaws")[[1]]$inst.type['wo
     f[order(-Timestamp),]
 }
 
+#' Add new nodes to a cluster
+#' @param cl is the cluster object. How many times must i repeat myself?
+#' @param n number of nodes to add
+#' @param groupid use this if you need to modify (resize) and exisiting group. These ids can be found via \code{aws.list.groups}
+#' @param type Instance type for the worker
+#' @param spotPrice is the price in dollars (numeric) you're willing
+#' to pay. It will choose a default if not given. If \code{spotPrice}
+#' is "ondemand", then OnDemand instances will be started at the OnDemand price
+#' @details This returns the info from \code{aws.clus.info}. If you'd
+#' like to delete this group, call the function with the
+#' \code{groupid} and \code{n} set to 0.
+#' @export
 aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaws")[[1]]$inst.type['worker'])
                             , spotPrice = NULL,name=sprintf("Group: %s", strftime(Sys.time(),"%Y-%m-%d:%H:%M"))){
     awsOpts <- options("mzaws")[[1]]
@@ -264,7 +322,9 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
     aws.clus.info(cl)
 }
 
-
+#' List the Instance group nodes (Task and Spot nodes)
+#' @param cl is the once again the object from \code{aws.clus.create}
+#' @export
 aws.list.groups <- function(cl){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()

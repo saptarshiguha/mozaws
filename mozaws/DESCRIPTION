@@ -1,0 +1,9 @@
+Package: mozaws
+Type: Package
+Title: R functions to start AWS Clusters at Mozilla
+Version: 1.0
+Date: 2015-05-31
+Author: Saptarshi Guha <sguha@mozilla.com>
+Maintainer: Saptarshi Guha <sguha@mozilla.com>
+Description: Functions that start and manage AWS clusters
+License: Something?
