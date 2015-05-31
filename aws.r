@@ -61,7 +61,7 @@ presult <- function(s){
 
 
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,customscript=options("mzaws")[[1]]$customscript){
+                           ,customscript=options("mzaws")[[1]]$customscript,wait=FALSE){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     getWT <- function(s,k){
@@ -95,7 +95,11 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     options(mzaws=awsOpts)
     k <- list(Id=res$ClusterId,Name=name)
     class(k) <- "awsCluster"
-    k
+    if(wait){
+        return(aws.clus.wait(k))
+    }else{
+        k
+    }
 }
 
 as.awsCluster <- function(clusterid,name=NA){
