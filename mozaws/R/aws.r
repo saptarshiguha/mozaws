@@ -23,7 +23,7 @@ aws.init <- function(ec2key=NULL,localpubkey=NULL,optsmore=NULL){
     }
     if(!is.null(optsmore)) for(x in names(optsmore)) opts[[x]] <- optsmore[[x]]
     opts$init <- TRUE
-    options(mzaws=opts);opts
+    invisible(options(mzaws=opts))
 }
 
 checkIfStarted <- function(){
