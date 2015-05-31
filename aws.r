@@ -170,10 +170,10 @@ print.awsCluster <- function(r){
     gtext <- if(length(grp)>0){
         sprintf("Number of Instance Groups: %s\n%s\n", length(grp),paste(unlist(lapply(grp,function(s){
                    if(s$Market=="SPOT"){
-                       sprintf("ID:%s, name: '%s' state:%s requested:%s (at $%s), running: %s", s$Id,s$Name,s$Status$State,
+                       sprintf("\tID:%s, name: '%s' state:%s requested:%s (at $%s), running: %s", s$Id,s$Name,s$Status$State,
                                s$RequestedInstanceCount, s$BidPrice, s$RunningInstanceCount)
                    }else{
-                       sprintf("ID:%s, name: '%s' state:%s requested:%s, running: %s", s$Id,s$Name,s$Status$State,
+                       sprintf("\tID:%s, name: '%s' state:%s requested:%s, running: %s", s$Id,s$Name,s$Status$State,
                                s$RequestedInstanceCount, s$RunningInstanceCount)
                    }
                })),collapse="\n"))
@@ -257,7 +257,7 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
         spotq <- sprintf("BidPrice=%s,", p)
         name= sprintf("Spot %s", name)
     }
-    temp=infuse("{{awscli}} emr add-instance-groups --cluster-id  {{clid}} --instance-groups InstanceCount={{n}},{{spotq}}InstanceGroupType=task,InstanceType={{type}},Name={{name}}", awscli=awsOpts$awscli,clid=cl$Id,n=as.integer(n),spotq=spotq, type=as.character(type),name=name)
+    temp=infuse("{{awscli}} emr add-instance-groups --cluster-id  {{clid}} --instance-groups InstanceCount={{n}},{{spotq}}InstanceGroupType=task,InstanceType={{mtype}},Name='{{foo}}'", awscli=awsOpts$awscli,clid=cl$Id,n=as.integer(n),spotq=spotq, mtype=as.character(type),foo=name)
     l <- presult(system(temp,intern=TRUE))
     aws.clus.info(cl)
 }
