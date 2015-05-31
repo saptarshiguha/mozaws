@@ -219,7 +219,7 @@ Core Nodes: {{nworker}} of  {{ workerstype }}
 {{gtext}}
 
 {{awsconsole}}
-",list(clid=r$Id, dd=Sys.time() - r$timeupdated,name=name, state=state, started=started, currently=currently, dns=dns, master=master['type'], isrunning=as.logical(master['running']), nworker=workers.core$'running', workerstype=workers.core$type,gtext=gtext,awsconsole=awsconsole))
+",list(clid=r$Id, dd=as.integer(round(Sys.time() - r$timeupdated,0)),name=name, state=state, started=started, currently=currently, dns=dns, master=master['type'], isrunning=as.logical(master['running']), nworker=workers.core$'running', workerstype=workers.core$type,gtext=gtext,awsconsole=awsconsole))
     cat(temp)
 }
 
