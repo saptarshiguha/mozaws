@@ -184,10 +184,13 @@ aws.script.desc <- function(cl, s,verb=TRUE,mon.sec=5){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
-    r <- presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}}--step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
+    r <- presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
     while(TRUE){
-        if(!is.null(r$Step$Status$Timeline$EndDateTime))
+        if(!is.null(r$Step$Status$Timeline$EndDateTime)){
+            ss <- r$Step$Status$State
+            if(r=="FAILED") warning("the step failed")
             return(cl)
+        }
         cat(".")
         if(verb) Sys.sleep(mon.sec)
     }

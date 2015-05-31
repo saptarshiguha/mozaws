@@ -7,5 +7,5 @@ then
 fi
 
 sleep 30
-R -e 'install.packages("binda"", repos="http://cran.cnr.Berkeley.edu",dep=TRUE)'
+R -e 'install.packages("binda", repos="http://cran.cnr.Berkeley.edu",dep=TRUE)'
 
