@@ -100,7 +100,7 @@ We can add on-demand nodes and spot nodes.
     Master Type: c3.2xlarge (and is running: TRUE)
     Core Nodes: 1 of  c3.2xlarge
     Number of Instance Groups: 2
-        ID:ig-W84RQA8PLUR9, name: 'Spot1' state:PROVISIONING requested:1 (at $0.077), running: 0
+        ID:ig-W84RQA8PLUR9, name: 'Spot1' state:PROVISIONING requested:1 (at $0.076), running: 0
         ID:ig-2UQ1SUVODUBJX, name: 'DMD1' state:RESIZING requested:1, running: 0
      
     https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:j-24XY7LVL8TZL9
