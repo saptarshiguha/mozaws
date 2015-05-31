@@ -141,6 +141,9 @@ aws.clus.info <- function(cl){
     acid <-  cl$Id
     r <- presult(system(infuse("{{awscli}} emr describe-cluster --cluster-id {{id}}",awscli=awsOpts$awscli,id=acid),intern=TRUE))
     r <- r$Cluster
+    r$timeupdated <- Sys.time()
+    r1 <- presult(system(infuse("{{awscli}} emr list-steps --cluster-id {{id}}",awscli=awsOpts$awscli,id=acid),intern=TRUE))$Steps
+    r$steps <- r1
     class(r) <- "awsCluster"
     r
 }
@@ -163,9 +166,22 @@ print.awsCluster <- function(r){
                              data.table(type=s$InstanceType,running=s$RunningInstanceCount)
                          }
                      }))
-
+    grp <- aws.list.groups(r)
+    gtext <- if(length(grp)>0){
+        sprintf("Number of Instance Groups: %s\n%s\n", length(grp),paste(unlist(lapply(grp,function(s){
+                   if(s$Market=="SPOT"){
+                       sprintf("ID:%s, name: '%s' state:%s requested:%s (at $%s), running: %s", s$Id,s$Name,s$Status$State,
+                               s$RequestedInstanceCount, s$BidPrice, s$RunningInstanceCount)
+                   }else{
+                       sprintf("ID:%s, name: '%s' state:%s requested:%s, running: %s", s$Id,s$Name,s$Status$State,
+                               s$RequestedInstanceCount, s$RunningInstanceCount)
+                   }
+               })),collapse="\n"))
+    }else ""
+        
     temp <- infuse("Cluster ID: {{clid}}
-Name: {{name}}
+This Information As of: {{dd}}
+Name: '{{name}}'
 State: {{state}}
 Started At : {{started}}
 Message: {{currently}}
@@ -176,11 +192,12 @@ Shiny: http://{{dns}}:3838
 JobTrakcer: http://{{dns}}:9026 (needs a socks)
 Master Type: {{master}} (and is running: {{isrunning}})
 Core Nodes: {{nworker}} of  {{ workerstype }}
-",list(clid=r$Cluster$Id, name=name, state=state, started=started, currently=currently, dns=dns, master=master['type'], isrunning=as.logical(master['running']), nworker=workers.core$'running', workerstype=workers.core$type))
+{{gtext}}
+",list(clid=r$Id, dd=r$timeupdated,name=name, state=state, started=started, currently=currently, dns=dns, master=master['type'], isrunning=as.logical(master['running']), nworker=workers.core$'running', workerstype=workers.core$type,gtext=gtext))
     cat(temp)
 }
 
-aws.script.desc <- function(cl, s,verb=TRUE,mon.sec=5){
+aws.script.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
@@ -188,8 +205,8 @@ aws.script.desc <- function(cl, s,verb=TRUE,mon.sec=5){
     while(TRUE){
         if(!is.null(r$Step$Status$Timeline$EndDateTime)){
             ss <- r$Step$Status$State
-            if(r=="FAILED") warning("the step failed")
-            return(cl)
+            if(ss=="FAILED") warning("the step failed")
+            return(aws.clus.info(cl))
         }
         cat(".")
         if(verb) Sys.sleep(mon.sec)
@@ -201,11 +218,9 @@ aws.script.run <- function(cl,script,wait=TRUE){
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     temp=infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://mozillametricsemrscripts/run.user.script.sh','{{scripturl}}']", cid=cl$Id,awscli=awsOpts$awscli, scripturl=script)
-    x <- cl$userSteps
-    if(is.null(x)) x <- list()
-    x[[ length(x) +1 ]] <- presult( system(temp,intern=TRUE))$StepIds
-    cl$userSteps <- x
-    if(wait) aws.script.desc(cl,x[[length(x)]]) else cl
+    x <- presult( system(temp,intern=TRUE))$StepIds
+    cl <- aws.clus.info(cl)
+    if(wait) aws.script.wait(cl,x) else cl
 }
 
 
@@ -221,7 +236,7 @@ aws.spot.price <- function(type=as.character(options("mzaws")[[1]]$inst.type['wo
 }
 
 aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaws")[[1]]$inst.type['worker'])
-                            , spotPrice = NULL,name=sprintf("Spot Group: %s", strftime(as.Date(),"%Y-%m-%d:%H:%MM"))){
+                            , spotPrice = NULL,name=sprintf("Group: %s", strftime(Sys.time(),"%Y-%m-%d:%H:%M"))){
     awsOpts <- options("mzaws")[[1]]
     checkIfStarted()
     n <- max(n,0)
@@ -231,6 +246,7 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
         return(aws.clus.info(cl))
     }
     if(is.character(spotPrice) && spotPrice=="ondemand"){
+        name= sprintf("On Demand %s", name)
         spotq=""
     }else{
         if(is.null (spotPrice)){
@@ -239,11 +255,13 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
         }else p <- spotPrice
         p <- as.character(round(p,2))
         spotq <- sprintf("BidPrice=%s,", p)
+        name= sprintf("Spot %s", name)
     }
-    temp=infuse("{{awscli}} emr add-instance-groups --cluster-id  {{clid}} --instance-groups InstanceCount={{n}},{{spotq}}InstanceGroupType=task,InstanceType={{type}},Name={{name}}", awscli=awsOpts$awscli,clid=cl$Id,n=as.integer(n),spotq=spotq, type=as.character(type),name)
+    temp=infuse("{{awscli}} emr add-instance-groups --cluster-id  {{clid}} --instance-groups InstanceCount={{n}},{{spotq}}InstanceGroupType=task,InstanceType={{type}},Name={{name}}", awscli=awsOpts$awscli,clid=cl$Id,n=as.integer(n),spotq=spotq, type=as.character(type),name=name)
     l <- presult(system(temp,intern=TRUE))
     aws.clus.info(cl)
 }
+
 
 aws.list.groups <- function(cl){
     awsOpts <- options("mzaws")[[1]]
