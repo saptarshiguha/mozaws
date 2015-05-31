@@ -187,7 +187,7 @@ aws.script.desc <- function(cl, s,verb=TRUE,mon.sec=5){
     r <- presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}}--step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
     while(TRUE){
         if(!is.null(r$Step$Status$Timeline$EndDateTime))
-            return(r)
+            return(cl)
         cat(".")
         if(verb) Sys.sleep(mon.sec)
     }
