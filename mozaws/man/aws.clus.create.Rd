@@ -16,7 +16,7 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 
 \item{hadoopops}{options that overide 'hadoopops' from options("mzaws")[[1]]}
 
-\item{timeout}{over timeout from the options}
+\item{timeout}{over timeout from the options (minutes)}
 
 \item{verbose}{be catty?}
 

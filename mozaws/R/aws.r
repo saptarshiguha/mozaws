@@ -173,6 +173,7 @@ aws.clus.info <- function(cl){
 
 isn <- function(s,j=NA) if(is.null(s) || length(s)==0) j else s
 
+#' @export
 print.awsCluster <- function(r){
     state <- isn(r$Status$State,NA)
     name <- isn(r$Name)

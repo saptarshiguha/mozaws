@@ -7,4 +7,7 @@ Author: Saptarshi Guha <sguha@mozilla.com>
 Maintainer: Saptarshi Guha <sguha@mozilla.com>
 Description: Functions that start and manage AWS clusters
 License: Something?
-Depends: rjson, data.table, devtools
+Depends:
+    rjson,
+    data.table,
+    devtools
