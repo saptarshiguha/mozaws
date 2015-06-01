@@ -79,7 +79,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     if(is.null(name)){
         existingalready <- awsOpts$numcreated
             existingalready <- existingalready+1
-            name <- sprintf("%s cluster: %s", Sys.info()[["user"]], existingalready+1)
+            name <- sprintf("%s cluster: %s", awsOpts$user, existingalready+1)
     }
     if(is.null(customscript)) customscript <- options("mzaws")[[1]]$customscript
     workers <- getWT(workers,"worker")
@@ -92,7 +92,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     }else customscript=""
     args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri
                 ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]]
-                ,workertype=workers[[2]],hadoopargs=hadoopargs, uusser=isn(Sys.info()[["user"]],isn(Sys.getenv("USERNAME"),"MysteriousI"))
+                ,workertype=workers[[2]],hadoopargs=hadoopargs, uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI"))
                 ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket)
     template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
     template <- infuse(template, args)

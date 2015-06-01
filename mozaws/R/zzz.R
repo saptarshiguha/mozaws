@@ -14,6 +14,7 @@ options(mzaws=list(
             localpubkey= NA,
             ec2key     = NA,
             customscript = NA,
+            user        = Sys.info()[["user"]],
             s3bucket    = "mozillametricsemrscripts",
             hadoopops   = c(
                 c("-y","yarn.resourcemanager.scheduler.class=org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler"),
