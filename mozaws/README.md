@@ -38,6 +38,17 @@ number of workers and to run a file across all the nodes at cluster startup time
 
 
 View the options using the function ``aws.options()``.
+Before you start the cluster, notice the value of
+
+    aws.options()[c("s3bucket","loguri")]
+    $s3bucket
+    [1] "mozillametricsemrscripts"
+     
+    $loguri
+    [1] "s3://mozillametricsemrscripts/logs"
+
+The value _mozillametricsemrscripts_ will need to be changed to S3 bucket you
+have read/write permissions to. Once done, change these values in the options.
 
 ## Start a Cluster
 Simple enough. This will create a cluster with the default number of workers and

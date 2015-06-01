@@ -1,9 +1,13 @@
         
 #' Initialize the AWS System
 #' @param ec2key this is your EC2 key that you created in the EC2 AWS Console
-#' @param localpubkey this is for example the contents of ~/.ssh/id_dsa.pub and if provided makes ssh'ing into the cluster easier
+#' @param localpubkey this is for example the contents of
+#' ~/.ssh/id_dsa.pub and if provided makes ssh'ing into the cluster
+#' easier
 #' @param optsmore more options that override the options
-#' @details \code{optsmore} can be used to override the values in options("mzaws")[[1]]. If you don't provide the EC2 key, this package will find the first available key 
+#' @details \code{optsmore} can be used to override the values in
+#' options("mzaws")[[1]]. If you don't provide the EC2 key, this
+#' package will find the first available key
 #' @examples
 #' \dontrun{
 #' aws.init(localpub="~/.ssh/id_dsa.pub")
