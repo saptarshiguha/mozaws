@@ -51,7 +51,7 @@ Before you start the cluster, notice the value of
 
 The value _mozillametricsemrscripts_ will need to be changed to S3 bucket you
 have read/write permissions to. Once done, change these values in the
-options. And you need to copy the file all the files in ``bootscriptsAndR`` to
+options. And you need to copy all the files in ``bootscriptsAndR`` to
 this S3 bucket.
 
 ## Start a Cluster
@@ -143,6 +143,8 @@ We can delete that costly On-Demand group ($0.420/hr) and add one more spot node
     Core Nodes: 1 of  c3.2xlarge
     Number of Instance Groups: 1
         ID:ig-CQB9ZB9PNQPH, name: 'Spot1' state:RESIZING requested:2 (at $0.076), running: 0
+
+    https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:j-24XY7LVL8TZL9
 
 ## Running Scripts (e.g. adding R packages) Across All the Nodes
 
