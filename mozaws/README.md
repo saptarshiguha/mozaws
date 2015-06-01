@@ -38,6 +38,8 @@ number of workers and to run a file across all the nodes at cluster startup time
 
 
 View the options using the function ``aws.options()``.
+
+## Before Starting
 Before you start the cluster, notice the value of
 
     aws.options()[c("s3bucket","loguri")]
@@ -142,5 +144,8 @@ We can delete that costly On-Demand group ($0.420/hr) and add one more spot node
 
 ## Running Scripts (e.g. adding R packages) Across All the Nodes
 
-     
+
+## Running Scripts on Just the Master Node
+
+
     
