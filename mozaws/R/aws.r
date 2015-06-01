@@ -17,7 +17,8 @@
 aws.init <- function(ec2key=NULL,localpubkey=NULL,optsmore=NULL){
     opts <- options("mzaws")[[1]]
     if(is.null(ec2key)){
-        opts$ec2key <- system("aws ec2 describe-key-pairs --output text --query 'KeyPairs[0].KeyName'",intern=TRUE)
+        aaws <- if(is.null(optsmore$aws)) "aws" else optsmore$aws
+        opts$ec2key <- system(sprintf("%s ec2 describe-key-pairs --output text --query 'KeyPairs[0].KeyName'",aaws),intern=TRUE)
         if(opts$ec2key =="None") stop("Could not find a key for the region")
         message(sprintf("Using first key found: %s",opts$ec2key))
     }
