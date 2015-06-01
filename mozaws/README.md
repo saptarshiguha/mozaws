@@ -50,7 +50,9 @@ Before you start the cluster, notice the value of
     [1] "s3://mozillametricsemrscripts/logs"
 
 The value _mozillametricsemrscripts_ will need to be changed to S3 bucket you
-have read/write permissions to. Once done, change these values in the options.
+have read/write permissions to. Once done, change these values in the
+options. And you need to copy the file all the files in ``bootscriptsAndR`` to
+this S3 bucket.
 
 ## Start a Cluster
 Simple enough. This will create a cluster with the default number of workers and
@@ -147,5 +149,8 @@ We can delete that costly On-Demand group ($0.420/hr) and add one more spot node
 
 ## Running Scripts on Just the Master Node
 
+### 1. SCP and run file remotely
+
+### 2. Using Scripts and Monitoring for Script to End
 
     
