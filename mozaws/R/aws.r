@@ -6,7 +6,7 @@
 #' easier
 #' @param optsmore more options that override the options
 #' @details \code{optsmore} can be used to override the values in
-#' options("mzaws")[[1]]. If you don't provide the EC2 key, this
+#' aws.options(). If you don't provide the EC2 key, this
 #' package will find the first available key
 #' @examples
 #' \dontrun{
@@ -15,7 +15,7 @@
 #' }
 #' @export
 aws.init <- function(ec2key=NULL,localpubkey=NULL,optsmore=NULL){
-    opts <- options("mzaws")[[1]]
+    opts <- aws.options()
     if(is.null(ec2key)){
         aaws <- if(is.null(optsmore$aws)) "aws" else optsmore$aws
         opts$ec2key <- system(sprintf("%s ec2 describe-key-pairs --output text --query 'KeyPairs[0].KeyName'",aaws),intern=TRUE)
@@ -32,7 +32,7 @@ aws.init <- function(ec2key=NULL,localpubkey=NULL,optsmore=NULL){
 }
 
 checkIfStarted <- function(){
-    if(options("mzaws")[[1]]$init) TRUE else stop("call aws.init first")
+    if(aws.options()$init) TRUE else stop("call aws.init first")
 }
 
 presult <- function(s){
@@ -43,7 +43,7 @@ presult <- function(s){
 #' @param name is the name of the cluster, if not provided one will be created for you
 #' @param workers defines the workers, see details
 #' @param master defines master , see details
-#' @param hadoopops options that overide 'hadoopops' from options("mzaws")[[1]]
+#' @param hadoopops options that overide 'hadoopops' from aws.options()
 #' @param timeout over timeout from the options (minutes)
 #' @param verbose be catty?
 #' @param emrfs turns on emrfs and consistency
@@ -53,9 +53,9 @@ presult <- function(s){
 #' also be set in options. If \code{wait} is FALSE, the function will
 #' return immediately and can be monitored using
 #' \code{aws.clus.wait}. If \code{workers} is a number, then the type
-#' is taken from options("mzaws")[[1]]. If a string, this corresponds
+#' is taken from aws.options(). If a string, this corresponds
 #' to the instance type and the number is taken from
-#' options("mzaws")[[1]]$numworkers. If a list, it needs to of the
+#' aws.options()$numworkers. If a list, it needs to of the
 #' form \code{list(number, type)}. For \code{master}, it is enough to
 #' leave as NULL (and will be inferred from options) or you pass a
 #' type. The \code{timeout} is a set number of hours after which the
@@ -69,7 +69,7 @@ presult <- function(s){
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
                            ,customscript=NULL,wait=FALSE){
-    awsOpts <- options("mzaws")[[1]]
+    awsOpts <- aws.options()
     checkIfStarted()
     getWT <- function(s,k){
         if(is.null(s)) return(list(if(k=="master") 1 else awsOpts$numworkers, awsOpts$inst.type[[ k ]]))
@@ -82,7 +82,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
             existingalready <- existingalready+1
             name <- sprintf("%s cluster: %s", awsOpts$user, existingalready+1)
     }
-    if(is.null(customscript)) customscript <- options("mzaws")[[1]]$customscript
+    if(is.null(customscript)) customscript <- aws.options()$customscript
     workers <- getWT(workers,"worker")
     master <- getWT(master,"master")
     hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
@@ -122,7 +122,7 @@ as.awsCluster <- function(clusterid,name=NA){
 #' @param cluster object (from \code{aws.clus.create}, \code{aws.clus.info})
 #' @export
 aws.kill <- function(clusters){
-    awsOpts <- options("mzaws")[[1]]
+    awsOpts <- aws.options()
     checkIfStarted()
     clusters <- if(is(clusters,"awsCluster")) list(s)
     clusterids <- unlist(lapply(clusters,function(s) s$Id))
@@ -141,7 +141,7 @@ aws.kill <- function(clusters){
 #' }
 #' @export
 aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
-    awsOpts <- options("mzaws")[[1]]
+    awsOpts <- aws.options()
     checkIfStarted()
     if(!is(clusters,"awsCluster")) stop("cluster must be of class awsCluster")
     ac <- clusters
@@ -163,7 +163,7 @@ aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
 #' @return an object of awsCluster. Very detailed object. Save it.
 #' @export
 aws.clus.info <- function(cl){
-    awsOpts <- options("mzaws")[[1]]
+    awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     acid <-  cl$Id
@@ -235,7 +235,7 @@ Core Nodes: {{nworker}} of  {{ workerstype }}
 #' @details This function will return once the step has finished
 #' @export
 aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
-    awsOpts <- options("mzaws")[[1]]
+    awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     r <- presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
@@ -255,7 +255,7 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
 #' @param script is a URL (not a file name!, something like http://) to download and run. E.g. an Rscript file
 #' @export
 aws.step.run <- function(cl,script,wait=TRUE){
-    awsOpts <- options("mzaws")[[1]]
+    awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     temp=infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{scripturl}}']", cid=cl$Id,awscli=awsOpts$awscli, scripturl=script,s3buk=awsOpts$s3bucket)
@@ -269,8 +269,8 @@ aws.step.run <- function(cl,script,wait=TRUE){
 #' @param hrsInPast prices since when as of now
 #' @return a data table with prices
 #' @export
-aws.spot.price <- function(type=as.character(options("mzaws")[[1]]$inst.type['worker']), hrsInPast=6){
-    awsOpts <- options("mzaws")[[1]]
+aws.spot.price <- function(type=as.character(aws.options()$inst.type['worker']), hrsInPast=6){
+    awsOpts <- aws.options()
     checkIfStarted()
     since <- strftime(Sys.time()-hrsInPast*3600,"%Y-%m-%dT%H:%M:%S.000Z")
     temp <- presult(system(infuse("{{awscli}} ec2 describe-spot-price-history --product-description \"Linux/UNIX (Amazon VPC)\" --instance-types {{type}} --start-time {{start}}", awscli=awsOpts$awscli,type=type, start=since),intern=TRUE))
@@ -292,9 +292,9 @@ aws.spot.price <- function(type=as.character(options("mzaws")[[1]]$inst.type['wo
 #' like to delete this group, call the function with the
 #' \code{groupid} and \code{n} set to 0.
 #' @export
-aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaws")[[1]]$inst.type['worker'])
+aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(aws.options()$inst.type['worker'])
                             , spotPrice = NULL,name=NULL){
-    awsOpts <- options("mzaws")[[1]]
+    awsOpts <- aws.options()
     checkIfStarted()
     n <- max(n,0)
     if(!is.null(groupid)){
@@ -323,7 +323,7 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(options("mzaw
 #' @param cl is the once again the object from \code{aws.clus.create}
 #' @export
 aws.list.groups <- function(cl,reqGt0=TRUE){
-    awsOpts <- options("mzaws")[[1]]
+    awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     Map(function(s) {
