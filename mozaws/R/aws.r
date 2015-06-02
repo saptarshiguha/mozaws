@@ -238,7 +238,7 @@ Message     : {{currently}}
 IP          : {{dns}}
 SSH         : ssh hadoop@{{dns}} (assuming you aws.init(localpub=your-pub-key) else ssh -i path-to-aws-pem-file hadoop@{{dns}}
 SOCKS       : ssh -ND 8157 hadoop@{{dns}} (and use FoxyProxy for Firefox or SwitchySharp for Chrome)
-Rstudio     : http://{{dns}}
+Rstudio     : http://{{dns}} (user / pass is /  metrics)
 Shiny       : http://{{dns}}:3838
 JobTracker  : http://{{dns}}:9026 (needs a socks)
 Spark UI    : http://{{dns}}: ( if spark == TRUE )
