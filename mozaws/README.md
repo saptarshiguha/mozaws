@@ -150,11 +150,35 @@ We can delete that costly On-Demand group ($0.420/hr) and add one more spot node
 
     https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:j-24XY7LVL8TZL9
 
+You can quote your own spot price based on spot price history. To retrieve this
+history, type
+
+    aws.spot.price(type="c3.2xlarge", hrsInPast=1)
+
+which will return spot prices for the last 1 hr for ``c3.2xlarge`` instance
+types. By default, the instance type is the one in
+``aws.options()$inst.type['worker']``
+
 ## Running Scripts (e.g. adding R packages) Across All the Nodes
 
+Once the cluster has started, you can submit 'scripts' to be run on all the
+nodes. For example you might want to install and R package. You also might want
+to submit a long running job and terminate the cluster after job completion. An
+example of one such script can be found at
+[https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh](https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh)
+. To launch a script(which are also called _steps_ in AWS land), type
+
+    cl <- aws.step.run(cl,
+    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",
+    ,name="Install R Package",wait=TRUE)
+
+details of steps(success/failure etc) can be found in ``cl$steps``. The above
+command will return immediately when ``wait=FALSE`` is used. You can monitor the
+state of the step/script by polling the value of ``cl$steps`` and extracting the
+step id (most recent first) 
 
 ## Running Scripts on Just the Master Node
-
+You would want packages to be installed on all the nodes
 ### 1. SCP and run file remotely
 
 ### 2. Using Scripts and Monitoring for Script to End

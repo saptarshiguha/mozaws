@@ -51,7 +51,7 @@ installShinyServer(){
     
     sudo mkdir -p /srv/shiny-server/examples
     sudo cp -R /usr/lib64/R/library/shiny/examples/* /srv/shiny-server/examples
-    sudo chown -R shiny:shiny /srv/shiny-server/examples
+##    sudo chown -R shiny:shiny /srv/shiny-server/examples
     sudo chmod 777 /srv/shiny-server/
 }
 
@@ -66,6 +66,8 @@ installRstudio(){
     echo "www-port=80" | sudo tee -a /etc/rstudio/rserver.conf
     echo "rsession-ld-library-path=/usr/local/lib" | sudo tee -a /etc/rstudio/rserver.conf
     echo "r-libs-user=/usr/local/rlibs/" | sudo tee -a /etc/rstudio/rsession.conf
+    echo "hadoop:hadoop" | sudo chpasswd
+    sudo sed  -e  's/uid >= 500/uid >= 450/' /etc/pam.d/rstudio
     sudo rstudio-server restart
 }
 

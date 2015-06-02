@@ -6,7 +6,7 @@ secondsToString <- function(secs,rnd=2){
   Round <- function(a,b){
     format(round(a,b),nsmall=2)
   }
-  if(secs<60) sprintf("%s seconds",secs)
+  if(secs<60) sprintf("%s seconds",Round(secs,rnd))
   else if(secs<60*60) sprintf("%s minutes",Round(secs/60,rnd))
   else if(secs< 86400) sprintf("%s hours", Round(secs/(60*60),rnd))
   else if(secs< (86400*30)) sprintf("%s days",Round(secs/(86400),rnd))
@@ -233,7 +233,7 @@ print.awsCluster <- function(r){
     }else ""
     awsconsole=sprintf("https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:%s",r$Id)
     temp <- infuse("Cluster ID: {{clid}}
-This Information ss of: {{dd}} ago
+This Information as of: {{dd}} ago
 Name        : '{{name}}'
 State       : {{state}}
 Started At  : {{started}}
@@ -241,7 +241,7 @@ Message     : {{currently}}
 IP          : {{dns}}
 SSH         : ssh hadoop@{{dns}} (assuming you aws.init(localpub=your-pub-key) else ssh -i path-to-aws-pem-file hadoop@{{dns}}
 SOCKS       : ssh -ND 8157 hadoop@{{dns}} (and use FoxyProxy for Firefox or SwitchySharp for Chrome)
-Rstudio     : http://{{dns}} (user / pass is /  metrics)
+Rstudio     : http://{{dns}} (user/pass is metrics/metrics)
 Shiny       : http://{{dns}}:3838
 JobTracker  : http://{{dns}}:9026 (needs a socks)
 Spark UI    : http://{{dns}}: ( if spark == TRUE )
@@ -251,7 +251,7 @@ Core Nodes  : {{nworker}} of  {{ workerstype }}
 
 {{awsconsole}}
 "
-,list(clid  =r$Id, dd=secondsToString(as.numeric(Sys.time() - r$timeupdated,"secs")),name=name
+,list(clid  =r$Id, dd=secondsToString(as.numeric(Sys.time() - r$timeupdated,"secs"),2),name=name
 , state     =state, started=started, currently=currently
 , dns       =dns, master=master['type'],isrunning=as.logical(master['running'])
 , nworker   =workers.core$'running', workerstype=workers.core$type,gtext=gtext
@@ -285,11 +285,11 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
 #' @param cl is a cluster object returned by \code{aws.clus.create} and friends
 #' @param script is a URL (not a file name!, something like http://) to download and run. E.g. an Rscript file
 #' @export
-aws.step.run <- function(cl,script,wait=TRUE){
+aws.step.run <- function(cl,script,name=NULL,wait=TRUE){
     awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
-    temp=infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{scripturl}}']", cid=cl$Id,awscli=awsOpts$awscli, scripturl=script,s3buk=awsOpts$s3bucket)
+    temp=infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps Type=CUSTOM_JAR,Name={{myname}},ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{scripturl}}']", cid=cl$Id,awscli=awsOpts$awscli, scripturl=script,s3buk=awsOpts$s3bucket,myname=if(!is.null(name)) name else "CustomStep")
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
     if(wait) aws.step.wait(cl,x) else cl
