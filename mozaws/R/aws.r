@@ -125,7 +125,10 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     k <- list(Id=res$ClusterId,Name=name)
     class(k) <- "awsCluster"
     if(wait){
-        return(aws.clus.wait(k))
+        res <- (aws.clus.wait(k))
+        ## States: http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/ProcessingCycle.html
+        if(isn(res$Status$State,"") != "WAITING") stop(sprintf("Cluster: %s Might Not have Started", res$Id))
+        res
     }else{
         k
     }
