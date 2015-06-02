@@ -56,9 +56,13 @@ this S3 bucket.
 
 ## Start a Cluster
 Simple enough. This will create a cluster with the default number of workers and
-default instance types
+default instance types 
 
     cl <- aws.clus.create(wait=TRUE)
+
+By default, ``wait`` is ``FALSE``. To wait for the end of cluster startup, do
+
+    cl <- aws.clus.wait(cl)
 
 Different number of workers, and worker types?
 

@@ -107,7 +107,8 @@ cd $HOME
 
 ## Create the user and install rserver
 echo "Creating Users"
-for auser in metrics dzeber cchoi aalmossawi bcolloran rweiss jjensen hulmer sguha joy
+# cchoi aalmossawi bcolloran rweiss jjensen hulmer sguha joy
+for auser in metrics
 do
     sudo useradd -m ${auser}
     echo "${auser}:${auser}" | sudo chpasswd
