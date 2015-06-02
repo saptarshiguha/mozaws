@@ -152,12 +152,13 @@ sudo R CMD javareconf
 sudo mkdir -p /usr/local/rlibs
 sudo chmod -R 4777 /usr/local/rlibs/
 ## Install your version of RAmazonS3
-R -e 'for(x in c("rJava","roxygen2","RCurl","XML","rmarkdown","shiny")){ install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE)}'
-R -e 'for(x in c("Hmisc","rjson","httr","devtools","forecast","zoo","latticeExtra")){ install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE)}'
+R -e 'for(x in c("rJava","roxygen2","RCurl","XML","rmarkdown","shiny")){ tryCatch(install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
+R -e 'for(x in c("Hmisc","rjson","httr","devtools","forecast","zoo","latticeExtra","maps","mixtools","lubridate")){ tryCatch(install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
 R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/rhekajq')"
 R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/RAmazonS3')"
 R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('daattali/shinyjs')"
 R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('Rdatatable/data.table', build_vignettes = FALSE)"
+R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('hafen/housingData')"
 
 wget https://github.com/saptarshiguha/terrific/releases/download/1.4/rterra_1.4.tar.gz
 R CMD INSTALL -l /usr/local/rlibs/ /home/hadoop/rterra_1.4.tar.gz
@@ -172,6 +173,9 @@ export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 R CMD INSTALL -l /usr/local/rlibs/ Rhipe_$RHIPE_VERSION.tar.gz
 
+## Teserra
+R -e "options(unzip = 'unzip', repos = 'http://cran.rstudio.com/'); library(devtools); tryCatch(install_github('datadr', 'tesseradata'),error=function(e) print(e))"
+R -e "options(unzip = 'unzip', repos = 'http://cran.rstudio.com/'); library(devtools); tryCatch(install_github('trelliscope', 'tesseradata'),error=function(e) print(e))"
 
 
 
@@ -204,14 +208,6 @@ print $is_master
 EOF
 ) > /tmp/isThisMaster
 
-(
-cat <<'EOF'
-require 'emr/common'
-instance_info = Emr::JsonInfoFile.new('instance')
-$is_running = instance_info['isRunningResourceManager'].to_s == 'true' 
-print $is_running
-EOF
-) > /tmp/isJTRunning
 
 isMaster=`ruby /tmp/isThisMaster`
 if [ $isMaster = "true" ]; then
