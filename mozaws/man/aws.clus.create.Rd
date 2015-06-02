@@ -5,7 +5,7 @@
 \usage{
 aws.clus.create(name = NULL, workers = NULL, master = NULL,
   hadoopops = NULL, timeout = NULL, verbose = FALSE, emrfs = FALSE,
-  customscript = NULL, wait = FALSE)
+  customscript = NULL, wait = FALSE, spark = FALSE)
 }
 \arguments{
 \item{name}{is the name of the cluster, if not provided one will be created for you}
@@ -14,7 +14,7 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 
 \item{master}{defines master , see details}
 
-\item{hadoopops}{options that overide 'hadoopops' from options("mzaws")[[1]]}
+\item{hadoopops}{options that overide 'hadoopops' from aws.options()}
 
 \item{timeout}{over timeout from the options (minutes)}
 
@@ -25,6 +25,8 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 \item{customscript}{override options}
 
 \item{wait}{TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits}
+
+\item{spark}{if TRUE will start a spark interactive cluster. If a spark cluster is used, you cannot write interactive hadoop jobs.}
 }
 \description{
 Create a cluster
@@ -34,9 +36,9 @@ The arguments \code{hadoopops, timeout, customscript} can
 also be set in options. If \code{wait} is FALSE, the function will
 return immediately and can be monitored using
 \code{aws.clus.wait}. If \code{workers} is a number, then the type
-is taken from options("mzaws")[[1]]. If a string, this corresponds
+is taken from aws.options(). If a string, this corresponds
 to the instance type and the number is taken from
-options("mzaws")[[1]]$numworkers. If a list, it needs to of the
+aws.options()$numworkers. If a list, it needs to of the
 form \code{list(number, type)}. For \code{master}, it is enough to
 leave as NULL (and will be inferred from options) or you pass a
 type. The \code{timeout} is a set number of hours after which the

@@ -3,8 +3,7 @@
 \alias{aws.spot.price}
 \title{Get Spot Prices}
 \usage{
-
-  aws.spot.price(type = as.character(options("mzaws")[[1]]$inst.type["worker"]),
+aws.spot.price(type = as.character(aws.options()$inst.type["worker"]),
   hrsInPast = 6)
 }
 \arguments{

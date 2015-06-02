@@ -3,7 +3,7 @@
 \alias{aws.list.groups}
 \title{List the Instance group nodes (Task and Spot nodes)}
 \usage{
-aws.list.groups(cl)
+aws.list.groups(cl, reqGt0 = TRUE)
 }
 \arguments{
 \item{cl}{is the once again the object from \code{aws.clus.create}}

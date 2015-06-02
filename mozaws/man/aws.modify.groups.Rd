@@ -4,9 +4,8 @@
 \title{Add new nodes to a cluster}
 \usage{
 aws.modify.groups(cl, n, groupid = NULL,
-  type = as.character(options("mzaws")[[1]]$inst.type["worker"]),
-  spotPrice = NULL, name = sprintf("Group: \%s", strftime(Sys.time(),
-  "\%Y-\%m-\%d:\%H:\%M")))
+  type = as.character(aws.options()$inst.type["worker"]), spotPrice = NULL,
+  name = NULL)
 }
 \arguments{
 \item{cl}{is the cluster object. How many times must i repeat myself?}

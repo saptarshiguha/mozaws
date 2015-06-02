@@ -8,7 +8,9 @@ aws.init(ec2key = NULL, localpubkey = NULL, optsmore = NULL)
 \arguments{
 \item{ec2key}{this is your EC2 key that you created in the EC2 AWS Console}
 
-\item{localpubkey}{this is for example the contents of ~/.ssh/id_dsa.pub and if provided makes ssh'ing into the cluster easier}
+\item{localpubkey}{this is for example the contents of
+~/.ssh/id_dsa.pub and if provided makes ssh'ing into the cluster
+easier}
 
 \item{optsmore}{more options that override the options}
 }
@@ -16,7 +18,9 @@ aws.init(ec2key = NULL, localpubkey = NULL, optsmore = NULL)
 Initialize the AWS System
 }
 \details{
-\code{optsmore} can be used to override the values in options("mzaws")[[1]]. If you don't provide the EC2 key, this package will find the first available key
+\code{optsmore} can be used to override the values in
+aws.options(). If you don't provide the EC2 key, this
+package will find the first available key
 }
 \examples{
 \dontrun{
