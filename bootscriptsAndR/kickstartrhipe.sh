@@ -153,9 +153,12 @@ sudo mkdir -p /usr/local/rlibs
 sudo chmod -R 4777 /usr/local/rlibs/
 ## Install your version of RAmazonS3
 R -e 'for(x in c("rJava","roxygen2","RCurl","XML","rmarkdown","shiny")){ install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE)}'
-R -e 'for(x in c("Hmisc","rjson","httr","data.table","devtools","forecast","zoo","latticeExtra")){ install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE)}'
+R -e 'for(x in c("Hmisc","rjson","httr","devtools","forecast","zoo","latticeExtra")){ install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE)}'
 R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/rhekajq')"
 R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/RAmazonS3')"
+R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('daattali/shinyjs')"
+R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('Rdatatable/data.table', build_vignettes = FALSE)"
+
 wget https://github.com/saptarshiguha/terrific/releases/download/1.4/rterra_1.4.tar.gz
 R CMD INSTALL -l /usr/local/rlibs/ /home/hadoop/rterra_1.4.tar.gz
 sudo chmod -R 4777 /usr/local/rlibs/
