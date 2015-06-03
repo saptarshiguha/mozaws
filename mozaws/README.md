@@ -205,6 +205,7 @@ want is a mapreduce job submitted from all the worker nodes!)
 
 2. Create a shell file with the following code (save it in ``s3://sguhaoutput/tmp/one/sh-driver.sh``)
 
+IS_MASTER=true
     IS_MASTER=true
     if [ -f /mnt/var/lib/info/instance.json ]
     then
