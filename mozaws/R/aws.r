@@ -121,7 +121,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
                               , s3buk=awsOpts$s3bucket,customscr = customscript)
     }else customscript=""
     sparkb=if(spark) {
-        "Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a'] Path='s3://telemetry-spark-emr/telemetry.sh'"
+        infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a'] Path='{{sparkmozilla}}'",sparkmozilla=awsOpts$sparkmozilla)
     } else ""
     args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri
                 ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb,norscript=norscript
