@@ -40,6 +40,9 @@ aws.init <- function(ec2key=NULL,localpubkey=NULL,optsmore=NULL){
         opts$ec2key <- kp[[1]]$KeyName
         if(opts$ec2key =="None") stop("Could not find a key for the region")
         message(sprintf("Using first key found: %s",opts$ec2key))
+    }else {
+        opts$ec2key <- ec2key
+        message(sprintf("Using provided key: %s", opts$ec2key))
     }
     if(!is.null(localpubkey)){
         if(file.exists(localpubkey)){ localpubkey <- readLines(localpubkey) }
