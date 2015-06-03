@@ -286,7 +286,7 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     r <- presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
     while(TRUE){
-        if(!is.null(r$Step$Status$Timeline$EndDateTime)){
+        if(isn(r$Step$Status$State,"") %in% c("FAILED","COMPLETED")){
             ss <- r$Step$Status$State
             if(ss=="FAILED") warning("the step failed")
             break
