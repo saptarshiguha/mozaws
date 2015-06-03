@@ -183,8 +183,7 @@ example of one such script can be found at
 . To launch a script(which are also called _steps_ in AWS land), type
 
     cl <- aws.step.run(cl,
-    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",
-    ,name="Install R Package",wait=TRUE)
+    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",,name="Install R Package",wait=TRUE)
 
 details of steps(success/failure etc) can be found in ``cl$steps``. The above
 command will return immediately when ``wait=FALSE`` is used. You can monitor the
