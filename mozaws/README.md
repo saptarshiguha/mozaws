@@ -195,9 +195,39 @@ step id (most recent first) . The 2nd parameter, must either be a ``http`` url
 file is then made executable and is started by the shell.
 
 ## Running Scripts on Just the Master Node
-You would want packages to be installed on all the nodes
-### 1. SCP and run file remotely
+You would want packages to be installed on all the nodes, but you might want to
+submit an R job, that is to be run _only_ on the master node (the last thing you
+want is a mapreduce job submitted from all the worker nodes!)
 
-### 2. Using Scripts and Monitoring for Script to End
+1. Keep your files in a S3 bucket (you can also keep your files on that can be
+   accessed with ``wget`` or ``curl`` etc), lets say
+   ``s3://sguhaoutput/tmp/one``
+
+2. Create a shell file with the following code (save it in ``s3://sguhaoutput/tmp/one/sh-driver.sh``)
+   
+   IS_MASTER=true
+   if [ -f /mnt/var/lib/info/instance.json ]
+   then
+	   IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
+   fi
+
+   if [ "$IS_MASTER" = false ]; then
+	exit
+   fi
+
+   ## If we are here , this is the master node.
+   ## Sync the s3 bucket and run the R job
+   aws s3 sync s3://sguhaoutput/tmp/one ./one/
+   R CMD BATCH ./one/rdriver.R ./one/rdriver.log
+
+3. Run the script. The following code will download the shell file and execute
+   it. As you can see from step(2), this file will a)run only if it's on the
+   master node and b) then sync the rest of the files c) start the R job
+
+    cl <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R
+    Job", wait=TRUE)
+
+4. The code will continue the job fails or succeeds. Upon completion, you can
+   check the status of the job. 
 
     
