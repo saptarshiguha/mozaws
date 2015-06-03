@@ -245,8 +245,8 @@ print.awsCluster <- function(r){
                })),collapse="\n"))
     }else ""
     awsconsole=sprintf("https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:%s",r$Id)
-    temp <- infuse("Cluster ID: {{clid}}
-This Information as of: {{dd}} ago
+    temp <- infuse("This Information as of: {{dd}} ago
+Cluster ID  : {{clid}}
 Name        : '{{name}}'
 State       : {{state}}
 Reason      : {{changereason}}
