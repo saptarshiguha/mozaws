@@ -115,9 +115,9 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     if(is.null(noR)){
         if(spark==TRUE) noR <- TRUE else noR <- FALSE
     }
-    if(noR) norscript="" else norscript="Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/r.step.sh']"
+    if(noR) norscript="" else norscript="Type=CUSTOM_JAR,Name='R Packages',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/r.step.sh']"
     if(!is.na(customscript)){
-        customscript <- sprintf("Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','%s']"
+        customscript <- sprintf("Type=CUSTOM_JAR,Name='Run User Script',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','%s']"
                               , customscript)
     }else customscript=""
     sparkb=if(spark) {
