@@ -183,11 +183,11 @@ aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
         temp <- infuse("{{awscli}} emr describe-cluster --cluster-id {{id}} --output text --query 'Cluster.Status.State'"
                       ,awscli=awsOpts$awscli,id=acid)
         res <- system(temp, intern=TRUE)
-        if(!(res %in% c("STARTING","BOOTSTRAPPING"))){ cat("\n"); break}
+        if(!(res %in% c("STARTING","BOOTSTRAPPING","RUNNING"))){ cat("\n"); break}
         if(!silent){cat(".")}
         Sys.sleep(mon.sec)
     }
-    cat(sprintf("Cluster[id=%s, name='%s'] has finished starting(or failing :)\n",ac$Id, ac$Name))
+    cat(sprintf("Cluster[id=%s, name='%s'] has started\n",ac$Id, ac$Name))
     aws.clus.info(ac)
 }
 
