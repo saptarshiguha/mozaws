@@ -26,7 +26,21 @@ that you can log into it easily (without using the PEM file above).
     aws.init(localpubkey="~/.ssh/id_dsa.pub")
 
 If ``ec2key`` is left empty, the function will use the first EC2 key it can find
-(by querying the AWS console).
+(by querying the AWS console). Very likely this will be the wrong one, so it is
+best to specify e.g.,
+
+    aws.init(ec2key="sguhaMozillaWest2",localpubkey="~/.ssh/id_dsa.pub")
+
+You can find the names of your EC2 keys in the AWS console. On Windows
+platforms, the initialization is slightly different because (it appears) that
+when calling ``aws`` though R's ``system`` call, it can't find the configuration
+file. So, the initialization is something like
+
+    aws.init(ec2key="sguhaMozillaWest2",localpubkey="path-pubkey",opts=list(awscli="aws
+    --region us-west-1 --output json ")
+
+(You _must_ have the ``--output json`` (this package wont work otherwise), the
+region could be different)
 
 You can set many options through this function. For example, to set the default
 number of workers and to run a file across all the nodes at cluster startup time,
