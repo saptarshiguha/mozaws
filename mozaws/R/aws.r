@@ -253,12 +253,12 @@ Reason      : {{changereason}}
 Started At  : {{started}}
 Message     : {{currently}}
 IP          : {{dns}}
-SSH         : ssh hadoop@{{dns}} (assuming you aws.init(localpub=your-pub-key) else ssh -i path-to-aws-pem-file hadoop@{{dns}}
+SSH         : ssh hadoop@{{dns}} (assuming you did aws.init(localpub=your-pub-key) else ssh -i path-to-aws-pem-file hadoop@{{dns}}
 SOCKS       : ssh -ND 8157 hadoop@{{dns}} (and use FoxyProxy for Firefox or SwitchySharp for Chrome)
 Rstudio     : http://{{dns}} (user/pass is metrics/metrics)
 Shiny       : http://{{dns}}:3838
 JobTracker  : http://{{dns}}:9026 (needs a socks)
-Spark UI    : http://{{dns}}: ( if spark == TRUE )
+Spark UI    : http://localhost:8888 but first run ssh -L 8888:localhost:8888 hadoop@{{dns}}
 Master Type : {{master}} (and is running: {{isrunning}})
 Core Nodes  : {{nworker}} of  {{ workerstype }}
 {{gtext}}
