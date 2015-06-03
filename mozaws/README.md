@@ -224,7 +224,7 @@ want is a mapreduce job submitted from all the worker nodes!)
 ```sh
     cl <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R Job", wait=TRUE)
 ```
-(4). The code will continue the job fails or succeeds. Upon completion, you can
+(4). The R console will wait  till the job fails or succeeds. Upon completion, you can
    check the status of the job. 
 
     
