@@ -227,8 +227,7 @@ want is a mapreduce job submitted from all the worker nodes!)
    master node and b) then sync the rest of the files c) start the R job
 
 ```sh
-    cl <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R
-    Job", wait=TRUE)
+    cl <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R Job", wait=TRUE)
 ```
     
 4. The code will continue the job fails or succeeds. Upon completion, you can
