@@ -283,16 +283,18 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
         if(!is.null(r$Step$Status$Timeline$EndDateTime)){
             ss <- r$Step$Status$State
             if(ss=="FAILED") warning("the step failed")
-            return(aws.clus.info(cl))
+            break
         }
         cat(".")
         if(verb) Sys.sleep(mon.sec)
     }
+    return(aws.clus.info(cl))
 }
 
 #' Run a step
 #' @param cl is a cluster object returned by \code{aws.clus.create} and friends
 #' @param script is a URL (not a file name!, something like http://) to download and run. E.g. an Rscript file
+#' @param wait is TRUE, will wait for result else a return a list with cluster object and the step id
 #' @export
 aws.step.run <- function(cl,script,name=NULL,wait=TRUE){
     awsOpts <- aws.options()
@@ -301,7 +303,7 @@ aws.step.run <- function(cl,script,name=NULL,wait=TRUE){
     temp=infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps Type=CUSTOM_JAR,Name='{{myname}}',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{scripturl}}']", cid=cl$Id,awscli=awsOpts$awscli, scripturl=script,s3buk=awsOpts$s3bucket,myname=if(!is.null(name)) name else "CustomStep")
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
-    if(wait) aws.step.wait(cl,x) else cl
+    if(wait) aws.step.wait(cl,x) else list(cl, x)
 }
 
 #' Get Spot Prices
