@@ -121,13 +121,13 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
                               , s3buk=awsOpts$s3bucket,customscr = customscript)
     }else customscript=""
     sparkb=if(spark) {
-        "Path='s3://support.elasticmapreduce/spark/install-spark','Install Spark',Args=['-v,1.2.1.a'] Path='s3://telemetry-spark-emr/telemetry.sh','SetupSpark'"
+        "Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a'] Path='s3://telemetry-spark-emr/telemetry.sh'"
     } else ""
     args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri
                 ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb,norscript=norscript
                 ,workertype=workers[[2]],hadoopargs=hadoopargs, uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI"))
                 ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket)
-    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{norscript}} {{customscript}}"
+    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} --steps Type=CUSTOM_JAR,Name='Permissions',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{norscript}} {{customscript}}"
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
     res <- presult(system(template, intern=TRUE))
@@ -162,9 +162,8 @@ as.awsCluster <- function(clusterid,name=NA){
 aws.kill <- function(clusters){
     awsOpts <- aws.options()
     checkIfStarted()
-    clusters <- if(is(clusters,"awsCluster")) list(s)
-    clusterids <- unlist(lapply(clusters,function(s) s$Id))
-    template <- infuse("{{awscli}} emr terminate-clusters --cluster-ids {{cid}}", awscli=awsOpts$awscli, cid=paste(clusterids, collapse=" "))
+    clusters <- if(!is(clusters,"awsCluster")) stop("cl must be awsCluster object")
+    template <- infuse("{{awscli}} emr terminate-clusters --cluster-ids {{cid}}", awscli=awsOpts$awscli, cid=cl$Id)
     system(template,intern=TRUE)
 }
 
