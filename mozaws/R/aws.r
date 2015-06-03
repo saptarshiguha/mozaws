@@ -250,6 +250,7 @@ print.awsCluster <- function(r){
 This Information as of: {{dd}} ago
 Name        : '{{name}}'
 State       : {{state}}
+Reason      : {{changereason}}
 Started At  : {{started}}
 Message     : {{currently}}
 IP          : {{dns}}
@@ -266,7 +267,7 @@ Core Nodes  : {{nworker}} of  {{ workerstype }}
 {{awsconsole}}
 "
 ,list(clid  =r$Id, dd=secondsToString(as.numeric(Sys.time() - r$timeupdated,"secs"),2),name=name
-, state     =state, started=started, currently=currently
+, state     =state, started=started, currently=currently,changereason = isn(r$Status$StateChangeReason$Message,"No Reason")
 , dns       =dns, master=master['type'],isrunning=as.logical(master['running'])
 , nworker   =workers.core$'running', workerstype=workers.core$type,gtext=gtext
 ,awsconsole =awsconsole))

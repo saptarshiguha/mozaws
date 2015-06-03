@@ -37,14 +37,6 @@ export MYHOME=/home/hadoop
 echo "Installing Packages"
 sudo yum -y install git emacs tbb tbb-devel jq jq-devel tmux libffi-devel htop libcurl-devel openssl-devel openssl098e
 
-## force python 2.7
-echo "Redoing Python"
-sudo rm /usr/bin/python /usr/bin/pip
-sudo ln -s /usr/bin/python2.7 /usr/bin/python
-sudo ln -s /usr/bin/pip-2.7 /usr/bin/pip
-sudo sed -i '1c\#!/usr/bin/python2.6' /usr/bin/yum
-
-
 
 
 ## Prepare Hadoop Related variables
