@@ -37,7 +37,7 @@ when calling ``aws`` though R's ``system`` call, it can't find the configuration
 file. So, the initialization is something like
 
     aws.init(ec2key="sguhaMozillaWest2",localpubkey="path-pubkey",opts=list(awscli="aws
-    --region us-west-1 --output json ")
+    --region us-west-2 --output json ")
 
 (You _must_ have the ``--output json`` (this package wont work otherwise), the
 region could be different)
