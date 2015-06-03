@@ -115,10 +115,10 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     if(is.null(noR)){
         if(spark==TRUE) noR <- TRUE else noR <- FALSE
     }
-    if(noR) norscript="" else norscript="Type=CUSTOM_JAR,Name='R Packages',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/r.step.sh']"
+    if(noR) norscript="" else norscript=infuse("Type=CUSTOM_JAR,Name='R Packages',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/r.step.sh']",s3buk=awsOpts$s3bucket)
     if(!is.na(customscript)){
-        customscript <- sprintf("Type=CUSTOM_JAR,Name='Run User Script',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','%s']"
-                              , customscript)
+        customscript <- infuse("Type=CUSTOM_JAR,Name='Run User Script',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{customscr}}']"
+                              , s3buk=awsOpts$s3bucket,customscr = customscript)
     }else customscript=""
     sparkb=if(spark) {
         "Path='s3://support.elasticmapreduce/spark/install-spark','Install Spark',Args=['-v,1.2.1.a'] Path='s3://telemetry-spark-emr/telemetry.sh','SetupSpark'"
