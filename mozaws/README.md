@@ -189,7 +189,10 @@ example of one such script can be found at
 details of steps(success/failure etc) can be found in ``cl$steps``. The above
 command will return immediately when ``wait=FALSE`` is used. You can monitor the
 state of the step/script by polling the value of ``cl$steps`` and extracting the
-step id (most recent first) 
+step id (most recent first) . The 2nd parameter, must either be a ``http`` url
+(or a  url that curl can understand or download) or a url that starts with
+``s3://`` in which the package will use ``aws s3 cp`` to download the file. This
+file is then made executable and is started by the shell.
 
 ## Running Scripts on Just the Master Node
 You would want packages to be installed on all the nodes
