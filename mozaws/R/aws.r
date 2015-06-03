@@ -72,7 +72,7 @@ presult <- function(s){
 #' @param customscript override options
 #' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
 #' @param spark if TRUE will start a spark interactive cluster. If a spark cluster is used, you cannot write interactive hadoop jobs.
-#' @param noR do not install a zillion R packages (if you're using spark-python, you might want to set this to TRUE and save time)
+#' @param noR do not install a zillion R packages (if you're using spark-python, you might want to set this to TRUE(which mozaws automatically does anyways) and save time)
 #' @details The arguments \code{hadoopops, timeout, customscript} can
 #' also be set in options. If \code{wait} is FALSE, the function will
 #' return immediately and can be monitored using
@@ -92,7 +92,7 @@ presult <- function(s){
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,customscript=NULL,wait=FALSE,spark=FALSE,noR=FALSE){
+                           ,customscript=NULL,wait=FALSE,spark=FALSE,noR=NULL){
     awsOpts <- aws.options()
     checkIfStarted()
     getWT <- function(s,k){
@@ -112,6 +112,9 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
     timeout <- if(is.null(timeout)) timeout else awsOpts$timeout
     if(emrfs) emrfs="--emrfs Consistent=true" else emrfs=""
+    if(is.null(noR)){
+        if(spark==TRUE) noR <- TRUE else noR <- FALSE
+    }
     if(noR) norscript="" else norscript="Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/r.step.sh']"
     if(!is.na(customscript)){
         customscript <- sprintf("Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','%s']"
