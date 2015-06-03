@@ -205,20 +205,20 @@ want is a mapreduce job submitted from all the worker nodes!)
 
 2. Create a shell file with the following code (save it in ``s3://sguhaoutput/tmp/one/sh-driver.sh``)
    
-   IS_MASTER=true
-   if [ -f /mnt/var/lib/info/instance.json ]
-   then
-	   IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
-   fi
-
-   if [ "$IS_MASTER" = false ]; then
-	exit
-   fi
-
-   ## If we are here , this is the master node.
-   ## Sync the s3 bucket and run the R job
-   aws s3 sync s3://sguhaoutput/tmp/one ./one/
-   R CMD BATCH ./one/rdriver.R ./one/rdriver.log
+      IS_MASTER=true
+      if [ -f /mnt/var/lib/info/instance.json ]
+      then
+          IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
+      fi
+    
+      if [ "$IS_MASTER" = false ]; then
+       exit
+      fi
+    
+      ## If we are here , this is the master node.
+      ## Sync the s3 bucket and run the R job
+      aws s3 sync s3://sguhaoutput/tmp/one ./one/
+      R CMD BATCH ./one/rdriver.R ./one/rdriver.log
 
 3. Run the script. The following code will download the shell file and execute
    it. As you can see from step(2), this file will a)run only if it's on the
