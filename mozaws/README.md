@@ -110,7 +110,7 @@ For spark,
 
     cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,customscript=c(sparkmoz = "s3://telemetry-spark-emr/telemetry.sh"))
 
-Note, *Spark and Hadoop MapReduce* will not work together. If you choose Spark,
+Note, Spark and Hadoop MapReduce *will not work together*. If you choose Spark,
 then you must use Spark for all your distributed computations. Coming soon, we
 will have Spark-R packages. With this package you can compute with Telemetry
 data using Spark and R as opposed to Spark and Python. Good times are
