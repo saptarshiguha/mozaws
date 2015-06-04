@@ -7,5 +7,5 @@ else
     curl  $1 -o user.sh
 fi
 chmod +x ./user.sh
-exec ./user.sh "$@"
+exec ./user.sh
 

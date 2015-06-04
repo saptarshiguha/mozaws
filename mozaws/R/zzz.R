@@ -4,19 +4,20 @@ library(data.table)
 
 .onLoad <- function(libname, pkgname) {
 options(mzaws=list(
-            init         = FALSE,
-            awscli       = "aws",
-            amiversion   = "3.6.0",
-            timeout      = "2880",
-            loguri       = NA,
-            numworkers   = 2,
-            numcreated   = 0,
-            localpubkey  = NA,
-            ec2key       = NA,
-            steps        = NA,
-            user         = Sys.info()[["user"]],
-            s3bucket     = NA,
-            hadoopops    = c(
+            init       = FALSE,
+            awscli     = "aws",
+            amiversion = "3.6.0",
+            timeout    = "2880",
+            loguri     = "s3://mozillametricsemrscripts/logs",
+            numworkers = 3,
+            numcreated = 0,
+            localpubkey= NA,
+            ec2key     = NA,
+            customscript = NA,
+            user        = Sys.info()[["user"]],
+            s3bucket    = "mozillametricsemrscripts",
+            sparkmozilla = "s3://telemetry-spark-emr/telemetry.sh"
+            hadoopops   = c(
                 c("-y","yarn.resourcemanager.scheduler.class=org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler"),
                 c("-c","fs.s3n.multipart.uploads.enabled=true"),
                 c("-c","fs.s3n.multipart.uploads.split.size=524288000"),

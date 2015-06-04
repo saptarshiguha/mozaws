@@ -6,7 +6,8 @@ then
 	IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
 fi
 
-hdfs dfs -chmod -R 777 /
-sudo chmod -R 777 /mnt
-
+if [ "$IS_MASTER" = true ]; then
+    hdfs dfs -chmod -R 777 /
+    sudo chmod -R 777 /mnt
+fi
 
