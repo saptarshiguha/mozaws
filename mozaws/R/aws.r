@@ -72,7 +72,6 @@ presult <- function(s){
 #' @param customscript override options
 #' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
 #' @param spark if TRUE will start a spark interactive cluster. If a spark cluster is used, you cannot write interactive hadoop jobs.
-#' @param noR do not install a zillion R packages (if you're using spark-python, you might want to set this to TRUE(which mozaws automatically does anyways) and save time)
 #' @details The arguments \code{hadoopops, timeout, customscript} can
 #' also be set in options. If \code{wait} is FALSE, the function will
 #' return immediately and can be monitored using
@@ -92,7 +91,7 @@ presult <- function(s){
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,customscript=NULL,wait=FALSE,spark=FALSE,noR=NULL){
+                           ,customscript=NULL,wait=FALSE,spark=FALSE){
     awsOpts <- aws.options()
     checkIfStarted()
     getWT <- function(s,k){
@@ -112,22 +111,18 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
     timeout <- if(is.null(timeout)) timeout else awsOpts$timeout
     if(emrfs) emrfs="--emrfs Consistent=true" else emrfs=""
-    if(is.null(noR)){
-        if(spark==TRUE) noR <- TRUE else noR <- FALSE
-    }
-    if(noR) norscript="" else norscript=infuse("Type=CUSTOM_JAR,Name='R Packages',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/r.step.sh']",s3buk=awsOpts$s3bucket)
     if(!is.na(customscript)){
-        customscript <- infuse("Type=CUSTOM_JAR,Name='Run User Script',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{customscr}}']"
-                              , s3buk=awsOpts$s3bucket,customscr = customscript)
+        customscript <- sprintf("Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','%s']"
+                              , customscript)
     }else customscript=""
     sparkb=if(spark) {
-        "Path='s3://support.elasticmapreduce/spark/install-spark','Install Spark',Args=['-v,1.2.1.a'] Path='s3://telemetry-spark-emr/telemetry.sh','SetupSpark'"
+        "Path='s3://support.elasticmapreduce/spark/install-spark','Install Spark','-v,1.2.1.a' Path='s3://telemetry-spark-emr/telemetry.sh','SetupSpark'"
     } else ""
     args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri
-                ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb,norscript=norscript
+                ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb
                 ,workertype=workers[[2]],hadoopargs=hadoopargs, uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI"))
                 ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket)
-    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{norscript}} {{customscript}}"
+    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
     res <- presult(system(template, intern=TRUE))
@@ -188,11 +183,11 @@ aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
         temp <- infuse("{{awscli}} emr describe-cluster --cluster-id {{id}} --output text --query 'Cluster.Status.State'"
                       ,awscli=awsOpts$awscli,id=acid)
         res <- system(temp, intern=TRUE)
-        if(!(res %in% c("STARTING","BOOTSTRAPPING","RUNNING"))){ cat("\n"); break}
+        if(!(res %in% c("STARTING","BOOTSTRAPPING"))){ cat("\n"); break}
         if(!silent){cat(".")}
         Sys.sleep(mon.sec)
     }
-    cat(sprintf("Cluster[id=%s, name='%s'] has started\n",ac$Id, ac$Name))
+    cat(sprintf("Cluster[id=%s, name='%s'] has finished starting(or failing :)\n",ac$Id, ac$Name))
     aws.clus.info(ac)
 }
 
@@ -216,7 +211,7 @@ aws.clus.info <- function(cl){
 
 isn <- function(s,j=NA) if(is.null(s) || length(s)==0) j else s
 
-#'@export
+#' @export
 print.awsCluster <- function(r){
     state <- isn(r$Status$State,NA)
     name <- isn(r$Name)
@@ -250,7 +245,6 @@ print.awsCluster <- function(r){
 This Information as of: {{dd}} ago
 Name        : '{{name}}'
 State       : {{state}}
-Reason      : {{changereason}}
 Started At  : {{started}}
 Message     : {{currently}}
 IP          : {{dns}}
@@ -267,7 +261,7 @@ Core Nodes  : {{nworker}} of  {{ workerstype }}
 {{awsconsole}}
 "
 ,list(clid  =r$Id, dd=secondsToString(as.numeric(Sys.time() - r$timeupdated,"secs"),2),name=name
-, state     =state, started=started, currently=currently,changereason = isn(r$Status$StateChangeReason$Message,"No Reason")
+, state     =state, started=started, currently=currently
 , dns       =dns, master=master['type'],isrunning=as.logical(master['running'])
 , nworker   =workers.core$'running', workerstype=workers.core$type,gtext=gtext
 ,awsconsole =awsconsole))
@@ -286,30 +280,28 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     r <- presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
     while(TRUE){
-        if(isn(r$Step$Status$State,"") %in% c("FAILED","COMPLETED")){
+        if(!is.null(r$Step$Status$Timeline$EndDateTime)){
             ss <- r$Step$Status$State
             if(ss=="FAILED") warning("the step failed")
-            break
+            return(aws.clus.info(cl))
         }
         cat(".")
         if(verb) Sys.sleep(mon.sec)
     }
-    return(aws.clus.info(cl))
 }
 
 #' Run a step
 #' @param cl is a cluster object returned by \code{aws.clus.create} and friends
 #' @param script is a URL (not a file name!, something like http://) to download and run. E.g. an Rscript file
-#' @param wait is TRUE, will wait for result else a return a list with cluster object and the step id
 #' @export
 aws.step.run <- function(cl,script,name=NULL,wait=TRUE){
     awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
-    temp=infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps Type=CUSTOM_JAR,Name='{{myname}}',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{scripturl}}']", cid=cl$Id,awscli=awsOpts$awscli, scripturl=script,s3buk=awsOpts$s3bucket,myname=if(!is.null(name)) name else "CustomStep")
+    temp=infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps Type=CUSTOM_JAR,Name={{myname}},ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{scripturl}}']", cid=cl$Id,awscli=awsOpts$awscli, scripturl=script,s3buk=awsOpts$s3bucket,myname=if(!is.null(name)) name else "CustomStep")
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
-    if(wait) aws.step.wait(cl,x) else list(cl, x)
+    if(wait) aws.step.wait(cl,x) else cl
 }
 
 #' Get Spot Prices
