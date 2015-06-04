@@ -1,3 +1,6 @@
+* auto-gen TOC:
+{:toc}
+
 # Introduction #
 
 With this package the user can create AWS clusters. Control the world. No. It
@@ -104,7 +107,7 @@ As above, call the ``aws.init``, then create a cluster, wait for it to end and t
 
 If you dont want spark,
 
-    cl <- aws.clus.create(workers=5, wait=TRUE, customscript=c(rpackages = "s3://mozillametricsemrscripts/r.step.sh")
+    cl <- aws.clus.create(workers=5, wait=TRUE, customscript=c(rpackages = "s3://mozillametricsemrscripts/r.step.sh"))
 
 For spark,
 

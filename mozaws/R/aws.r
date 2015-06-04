@@ -125,7 +125,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL
     timeout <- if(is.null(timeout)) timeout else awsOpts$timeout
     if(emrfs) emrfs="--emrfs Consistent=true" else emrfs=""
     if(!is.na(customscript)){
-        customscript <- makeNiceString(customscript)
+        customscript <- makeNiceString(customscript,awsOpts)
     }else customscript=""
     if(spark)
         sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a']")
