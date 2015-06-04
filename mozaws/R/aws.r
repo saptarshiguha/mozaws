@@ -340,11 +340,11 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
 #' @param script is a URL (not a file name!, something like http://) to download and run. E.g. an Rscript file
 #' @param args arguments(character array) that are passed to the script (names will not be passed, so this is positional arguments)
 #' @export
-aws.step.run <- function(cl,wait=TRUE,script,name=NULL,argvector=NULL){
+aws.step.run <- function(cl,wait=TRUE,script,name=NULL,args=NULL){
     awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
-    scripturl <- makeNiceString( structure(list( c(script,as.character(args)), names= if(is.null(name)) "User Step" else name)),awsOpts)
+    scripturl <- mozaws:::makeNiceString( structure(list( c(script,as.character(args)), names= if(is.null(name)) "User Step" else name)),awsOpts)
     temp <- infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps {{scripturl}}",cid=cl$Id,awscli=awsOpts$awscli, scripturl=scripturl)
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
