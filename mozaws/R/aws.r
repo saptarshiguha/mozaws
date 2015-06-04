@@ -147,7 +147,6 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL
             existingalready <- existingalready+1
             name <- sprintf("%s cluster: %s", awsOpts$user, existingalready+1)
     }
-    if(is.null(customscript)) customscript <- aws.options()$customscript
     workers <- getWT(workers,"worker")
     master <- getWT(master,"master")
     hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
@@ -157,7 +156,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL
         customscript <- makeNiceString(steps,awsOpts)
     }else if(!is.na(awsOpts$steps)) customscript <- makeNiceString(awsOpts$steps, awsOpts)
     else customscript=""
-    otherbs <- if(!is.null(bsactions)) makeNiceBS(basactions)
+    otherbs <- if(!is.null(bsactions)) makeNiceBS(bsactions)
     if(spark)
         sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a']")
     else
