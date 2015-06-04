@@ -36,8 +36,7 @@ platforms, the initialization is slightly different because (it appears) that
 when calling ``aws`` though R's ``system`` call, it can't find the configuration
 file. So, the initialization is something like
 
-    aws.init(ec2key="sguhaMozillaWest2",localpubkey="path-pubkey",opts=list(awscli="aws
-    --region us-west-2 --output json ")
+    aws.init(ec2key="sguhaMozillaWest2",localpubkey="path-pubkey",opts=list(awscli="aws --region us-west-2 --output json ")
 
 (You _must_ have the ``--output json`` (this package wont work otherwise), the
 region could be different)
@@ -45,13 +44,9 @@ region could be different)
 You can set many options through this function. For example, to set the default
 number of workers and to run a file across all the nodes at cluster startup time,
 
-    aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5,
-    customscript='https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh'))
-
+    aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5, customscript='https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh'))
     aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5,inst.type  = c(worker="c3.xlarge",master="c3.xlarge")))
 
-
-View the options using the function ``aws.options()``.
 
 ## Before Starting
 Before you start the cluster, notice the value of
@@ -67,6 +62,9 @@ The value _mozillametricsemrscripts_ will need to be changed to S3 bucket you
 have read/write permissions to. Once done, change these values in the
 options. And you need to copy all the files in ``bootscriptsAndR`` to
 this S3 bucket.
+
+View the options using the function ``aws.options()``.
+
 
 ## Start a Cluster
 Simple enough. This will create a cluster with the default number of workers and
@@ -86,7 +84,44 @@ Different number of workers, and worker types?
 Run a R script (or any shell script) after cluster startup (and kill the cluster
 after one day)
 
-    cl <- aws.clus(workers=1, timeout=1440,customscript="https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh")
+    cl <- aws.clus(workers=1, timeout=1440,customscript="https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh",wait=TRUE)
+
+And a spark cluster?
+
+    cl <- aws.clus.create(workers=5,spark=TRUE, wait=TRUE)
+
+These clusters will not have RHIPE on them. For that we have another step. See the file _kickstartrhipe.sh_ for what is bootstrapped.
+
+### For the Mozilla Metrics Team
+
+You will want either a lot of R packages, RHIPE and/or Mozilla's Spark libraries
+for telemetry. It's easy enough. We haven't described the commands, but they are
+described at the end of this page.
+
+As above, call the ``aws.init``, then create a cluster, wait for it to end and then run some steps which will install RHIPE and/or Mozilla telemetry libraries
+
+    aws.init(ec2key="something", localpubkey="path-to-pubkey", opts=list(loguri= "s3://mozillametricsemrscripts/logs",s3bucket= "mozillametricsemrscripts"))
+
+If you dont want spark,
+
+    cl <- aws.clus.create(workers=5, wait=TRUE, customscript=c(rpackages = "s3://mozillametricsemrscripts/r.step.sh")
+
+For spark,
+
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,customscript=c(sparkmoz = "s3://telemetry-spark-emr/telemetry.sh"))
+
+Note, *Spark and Hadoop MapReduce* will not work together. If you choose Spark,
+then you must use Spark for all your distributed computations. Coming soon, we
+will have Spark-R packages. With this package you can compute with Telemetry
+data using Spark and R as opposed to Spark and Python. Good times are
+ahead. Have fortitude.
+
+
+To have R packages too, you can try something like this
+
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,customscript=c(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"
+                                                                         ,sparkmoz = "s3://telemetry-spark-emr/telemetry.sh"))
+
 
 ## Describe the Cluster
 Once you've done the above, calling ``aws.clus.info`` will return detailed

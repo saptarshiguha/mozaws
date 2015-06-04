@@ -61,6 +61,18 @@ presult <- function(s){
     fromJSON(paste(s,collapse="\n"))
 }
 
+makeNiceString <- function(s,awsOpts){
+    j <- 0
+    nn <- names(s)
+    x <- c()
+    for(i in seq_along(s)){
+        an <- if(nn[i]=="") sprintf("User Step:%s",j) else nn[i]
+        x <- c(x,infuse("Type=CUSTOM_JAR,Name='{{myname}}',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{customscr}}']"
+                      , s3buk=awsOpts$s3bucket,myname=an,customscr = as.character(s[i])))
+    }
+    paste(x,collapse=" ")
+}
+
 #' Create a cluster
 #' @param name is the name of the cluster, if not provided one will be created for you
 #' @param workers defines the workers, see details
@@ -69,10 +81,9 @@ presult <- function(s){
 #' @param timeout over timeout from the options (minutes)
 #' @param verbose be catty?
 #' @param emrfs turns on emrfs and consistency
-#' @param customscript override options
+#' @param customscript a character vector of EMR 'steps' to run. These could be shell files which are downloaded and executed (see \code{aws.step.run}). The format is a named vector. 
 #' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
-#' @param spark if TRUE will start a spark interactive cluster. If a spark cluster is used, you cannot write interactive hadoop jobs.
-#' @param noR do not install a zillion R packages (if you're using spark-python, you might want to set this to TRUE(which mozaws automatically does anyways) and save time)
+#' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries
 #' @details The arguments \code{hadoopops, timeout, customscript} can
 #' also be set in options. If \code{wait} is FALSE, the function will
 #' return immediately and can be monitored using
@@ -91,8 +102,9 @@ presult <- function(s){
 #' s <- aws.clus.wait(s) 
 #' }
 #' @export
-aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,customscript=NULL,wait=FALSE,spark=FALSE,noR=NULL){
+aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL
+                           ,timeout=NULL,verbose=FALSE,emrfs=FALSE
+                           ,customscript=NULL,wait=FALSE,spark=FALSE){
     awsOpts <- aws.options()
     checkIfStarted()
     getWT <- function(s,k){
@@ -112,22 +124,18 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
     timeout <- if(is.null(timeout)) timeout else awsOpts$timeout
     if(emrfs) emrfs="--emrfs Consistent=true" else emrfs=""
-    if(is.null(noR)){
-        if(spark==TRUE) noR <- TRUE else noR <- FALSE
-    }
-    if(noR) norscript="" else norscript=infuse("Type=CUSTOM_JAR,Name='R Packages',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/r.step.sh']",s3buk=awsOpts$s3bucket)
     if(!is.na(customscript)){
-        customscript <- infuse("Type=CUSTOM_JAR,Name='Run User Script',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{customscr}}']"
-                              , s3buk=awsOpts$s3bucket,customscr = customscript)
+        customscript <- makeNiceString(customscript)
     }else customscript=""
-    sparkb=if(spark) {
-        infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a'] Path='{{sparkmozilla}}'",sparkmozilla=awsOpts$sparkmozilla)
-    } else ""
+    if(spark)
+        sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a']")
+    else
+        sparkb <- ""
     args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri
-                ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb,norscript=norscript
+                ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],sparkb=sparkb
                 ,workertype=workers[[2]],hadoopargs=hadoopargs, uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI"))
                 ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket)
-    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} --steps Type=CUSTOM_JAR,Name='Permissions',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{norscript}} {{customscript}}"
+    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{sparkb}}  --steps Type=CUSTOM_JAR,Name='Permissions',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
     res <- presult(system(template, intern=TRUE))
