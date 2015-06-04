@@ -62,13 +62,41 @@ presult <- function(s){
 }
 
 makeNiceString <- function(s,awsOpts){
+    if(!is.list(s)) stop("steps must be a list")
     j <- 0
     nn <- names(s)
     x <- c()
+    ## format is name = c(path, arg1, arg2,...,argn)
     for(i in seq_along(s)){
-        an <- if(nn[i]=="") sprintf("User Step:%s",j) else nn[i]
-        x <- c(x,infuse("Type=CUSTOM_JAR,Name='{{myname}}',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{customscr}}']"
-                      , s3buk=awsOpts$s3bucket,myname=an,customscr = as.character(s[i])))
+        an <- if(length(nn)==0 || nn[i]=="") sprintf("User Step:%s",j) else nn[i]
+        args <- if(length(s[[i]][-1])>0) sprintf(",%s",paste( sapply(s[[i]][-1],function(s) sprintf("'%s'",s)),collapse=",")) else args=""
+        x <- c(x,infuse("Type=CUSTOM_JAR,Name='{{myname}}',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/run.user.script.sh','{{customscr}}'{{args}}]"
+                      , s3buk=awsOpts$s3bucket,myname=an,customscr = as.character(s[[i]][1]),args=args))
+        j <- j+1
+    }
+    paste(x,collapse=" ")
+}
+
+makeNiceBS <- function(s, ...){
+    if(!is.list(s)) stop("other bootstrap actions must be a list")
+    j <- 0
+    nn <- names(s)
+    x <- c()
+    ## format is list( name1 = c(path, arg1=value1, arg2=value2,value3,value4,...,argn=valuen)
+    ## not all values need have a argnme atached
+    for(i in seq_along(s)){
+        an <- if(length(nn)==0 || nn[i]=="") sprintf("User BS:%s",j) else nn[i]
+        args <- ""
+        if(length(s[[i]][-1])>0){
+            k <- s[[i]][-1]
+            if(is.null(names(k))) names(k) <- ""
+            args <- paste(unlist(mapply(function(a1,a2){
+                       if(a1!="") sprintf("'%s,%s'", a1,a2) else sprintf("'%s'",a2)
+                   }, names(k), k,SIMPLIFY=FALSE)),collapse=",")
+            args <- sprintf(",Args=[%s]",args)
+        }
+        x <- c(x,infuse("Path={{path}},Name='{{an}}'{{args}}", path=s[[i]][[1]],an=an,args=args))
+        j <- j+1
     }
     paste(x,collapse=" ")
 }
@@ -125,10 +153,11 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL
     hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
     timeout <- if(is.null(timeout)) timeout else awsOpts$timeout
     if(emrfs) emrfs="--emrfs Consistent=true" else emrfs=""
-    if(!is.na(steps)){
+    if(!is.null(steps)){
         customscript <- makeNiceString(steps,awsOpts)
-    }else customscript=""
-    otherbs <- if(!is.null(bsactions)) paste(basactions,collapse=" ") else ""
+    }else if(!is.na(awsOpts$steps)) customscript <- makeNiceString(awsOpts$steps, awsOpts)
+    else customscript=""
+    otherbs <- if(!is.null(bsactions)) makeNiceBS(basactions)
     if(spark)
         sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a']")
     else

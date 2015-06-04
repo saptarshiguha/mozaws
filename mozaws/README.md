@@ -45,7 +45,7 @@ region could be different)
 You can set many options through this function. For example, to set the default
 number of workers and to run a file across all the nodes at cluster startup time,
 
-    aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5, customscript='https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh'))
+    aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5, steps=list('https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh')))
     aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5,inst.type  = c(worker="c3.xlarge",master="c3.xlarge")))
 
 
@@ -85,7 +85,7 @@ Different number of workers, and worker types?
 Run a R script (or any shell script) after cluster startup (and kill the cluster
 after one day)
 
-    cl <- aws.clus(workers=1, timeout=1440,customscript="https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh",wait=TRUE)
+    cl <- aws.clus(workers=1, timeout=1440,steps=list("https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"),wait=TRUE)
 
 And a spark cluster? This just installs Spark and you can write python Spark jobs.
 
@@ -105,11 +105,11 @@ As above, call the ``aws.init``, then create a cluster, wait for it to end and t
 
 If you *don't want spark*,
 
-    cl <- aws.clus.create(workers=5, wait=TRUE, customscript=c(rpackages = "s3://mozillametricsemrscripts/r.step.sh"))
+    cl <- aws.clus.create(workers=5, wait=TRUE, steps=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"))
 
 For spark _and_ Mozilla Spark Telemetry libraries,it is slightly different since ``telemetry.sh`` is supposed to be run as a bootstrap script.
 
-    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE, bsactions="Path='s3://telemetry-spark-emr/telemetry.sh'")
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE, bsactions=list(MozSpark=c('s3://telemetry-spark-emr/telemetry.sh'))
 
 Note, Spark and Hadoop MapReduce *will not work together*. If you choose Spark,
 then you must use Spark for all your distributed computations. Coming soon, we
@@ -119,8 +119,8 @@ ahead. Have fortitude.
 
 Some other examples, not likely needed now. To have R packages, Spark, and Mozilla Spark libraries 
 
-    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,bsactions="Path='s3://telemetry-spark-emr/telemetry.sh'"
-                          ,customscript=c(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,bsactions=list(MozSpark=c('s3://telemetry-spark-emr/telemetry.sh')
+                          ,steps=list(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
 
 This is not of much use right now ...
 
@@ -219,7 +219,7 @@ example of one such script can be found at
 . To launch a script(which are also called _steps_ in AWS land), type
 
     cl <- aws.step.run(cl,
-    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",,name="Install R Package",wait=TRUE)
+    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",name="Install R Package",wait=TRUE)
 
 details of steps(success/failure etc) can be found in ``cl$steps``. The above
 command will return immediately when ``wait=FALSE`` is used. You can monitor the
