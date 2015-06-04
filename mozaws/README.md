@@ -87,7 +87,7 @@ after one day)
 
     cl <- aws.clus(workers=1, timeout=1440,customscript="https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh",wait=TRUE)
 
-And a spark cluster?
+And a spark cluster? This just installs Spark and you can write python Spark jobs.
 
     cl <- aws.clus.create(workers=5,spark=TRUE, wait=TRUE)
 
@@ -103,7 +103,7 @@ As above, call the ``aws.init``, then create a cluster, wait for it to end and t
 
     aws.init(ec2key="something", localpubkey="path-to-pubkey", opts=list(loguri= "s3://mozillametricsemrscripts/logs",s3bucket= "mozillametricsemrscripts"))
 
-If you dont want spark,
+If you *don't want spark*,
 
     cl <- aws.clus.create(workers=5, wait=TRUE, customscript=c(rpackages = "s3://mozillametricsemrscripts/r.step.sh"))
 
@@ -117,15 +117,12 @@ will have Spark-R packages. With this package you can compute with Telemetry
 data using Spark and R as opposed to Spark and Python. Good times are
 ahead. Have fortitude.
 
-
-To have R packages and just Spark
-
-    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,customscript=c(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
-                                                                         
-To have R packages, Spark, and Mozilla Spark libraries 
+Some other examples, not likely needed now. To have R packages, Spark, and Mozilla Spark libraries 
 
     cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,bsactions="Path='s3://telemetry-spark-emr/telemetry.sh'"
                           ,customscript=c(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
+
+This is not of much use right now ...
 
 ## Describe the Cluster
 Once you've done the above, calling ``aws.clus.info`` will return detailed
