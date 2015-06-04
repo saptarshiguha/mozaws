@@ -344,7 +344,9 @@ aws.step.run <- function(cl,wait=TRUE,script,name=NULL,args=NULL){
     awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
-    scripturl <- mozaws:::makeNiceString( structure(list( c(script,as.character(args)), names= if(is.null(name)) "User Step" else name)),awsOpts)
+    l<- list( c(script,as.character(args)))
+    names(l) <- if(is.null(name)) "User Step" else name
+    scripturl <- makeNiceString( l,awsOpts)
     temp <- infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps {{scripturl}}",cid=cl$Id,awscli=awsOpts$awscli, scripturl=scripturl)
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
