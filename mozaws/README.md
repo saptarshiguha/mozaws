@@ -222,6 +222,10 @@ step id (most recent first) . The 2nd parameter, must either be a ``http`` url
 ``s3://`` in which the package will use ``aws s3 cp`` to download the file. This
 file is then made executable and is started by the shell.
 
+You can pass positional arguments to scripts
+
+    cl <- aws.step.run(cl, "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",name="Install R Package",args=c(10,12,'foo 1'),wait=TRUE)
+
 ## Running Scripts on Just the Master Node
 You would want packages to be installed on all the nodes, but you might want to
 submit an R job, that is to be run _only_ on the master node (the last thing you
