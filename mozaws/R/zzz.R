@@ -16,7 +16,6 @@ options(mzaws=list(
             customscript = NA,
             user        = Sys.info()[["user"]],
             s3bucket    = "mozillametricsemrscripts",
-            sparkmozilla = "s3://telemetry-spark-emr/telemetry.sh"
             hadoopops   = c(
                 c("-y","yarn.resourcemanager.scheduler.class=org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler"),
                 c("-c","fs.s3n.multipart.uploads.enabled=true"),
