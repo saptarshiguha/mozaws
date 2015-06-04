@@ -109,20 +109,13 @@ If you *don't want spark*,
 
 For spark _and_ Mozilla Spark Telemetry libraries,it is slightly different since ``telemetry.sh`` is supposed to be run as a bootstrap script.
 
-    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE, bsactions=list(MozSpark=c('s3://telemetry-spark-emr/telemetry.sh'))
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE, bsactions=list(MozSpark='s3://telemetry-spark-emr/telemetry.sh'))
 
 Note, Spark and Hadoop MapReduce *will not work together*. If you choose Spark,
 then you must use Spark for all your distributed computations. Coming soon, we
 will have Spark-R packages. With this package you can compute with Telemetry
 data using Spark and R as opposed to Spark and Python. Good times are
 ahead. Have fortitude.
-
-Some other examples, not likely needed now. To have R packages, Spark, and Mozilla Spark libraries 
-
-    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,bsactions=list(MozSpark=c('s3://telemetry-spark-emr/telemetry.sh')
-                          ,steps=list(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
-
-This is not of much use right now ...
 
 ## Describe the Cluster
 Once you've done the above, calling ``aws.clus.info`` will return detailed

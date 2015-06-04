@@ -3,14 +3,16 @@
 \alias{aws.step.run}
 \title{Run a step}
 \usage{
-aws.step.run(cl, script, name = NULL, wait = TRUE)
+aws.step.run(cl, wait = TRUE, script, name = NULL, argvector = NULL)
 }
 \arguments{
 \item{cl}{is a cluster object returned by \code{aws.clus.create} and friends}
 
+\item{wait}{is TRUE, will wait for result else a return a list with cluster object and the step id}
+
 \item{script}{is a URL (not a file name!, something like http://) to download and run. E.g. an Rscript file}
 
-\item{wait}{is TRUE, will wait for result else a return a list with cluster object and the step id}
+\item{args}{arguments(character array) that are passed to the script (names will not be passed, so this is positional arguments)}
 }
 \description{
 Run a step
