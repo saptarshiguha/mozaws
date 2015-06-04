@@ -40,9 +40,6 @@ aws.init <- function(ec2key=NULL,localpubkey=NULL,optsmore=NULL){
         opts$ec2key <- kp[[1]]$KeyName
         if(opts$ec2key =="None") stop("Could not find a key for the region")
         message(sprintf("Using first key found: %s",opts$ec2key))
-    }else {
-        opts$ec2key <- ec2key
-        message(sprintf("Using provided key: %s", opts$ec2key))
     }
     if(!is.null(localpubkey)){
         if(file.exists(localpubkey)){ localpubkey <- readLines(localpubkey) }
@@ -133,10 +130,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     if(wait){
         res <- (aws.clus.wait(k))
         ## States: http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/ProcessingCycle.html
-        if(!(isn(res$Status$State,"") %in% c("RUNNING","WAITING"))){
-            print(res)
-            stop(sprintf("Cluster: %s Might Not have Started", res$Id))
-        }
+        if(!(isn(res$Status$State,"") %in% c("RUNNING","WAITING"))) stop(sprintf("Cluster: %s Might Not have Started", res$Id))
         res
     }else{
         k

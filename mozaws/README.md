@@ -183,7 +183,8 @@ example of one such script can be found at
 . To launch a script(which are also called _steps_ in AWS land), type
 
     cl <- aws.step.run(cl,
-    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",,name="Install R Package",wait=TRUE)
+    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",
+    ,name="Install R Package",wait=TRUE)
 
 details of steps(success/failure etc) can be found in ``cl$steps``. The above
 command will return immediately when ``wait=FALSE`` is used. You can monitor the
@@ -198,33 +199,36 @@ You would want packages to be installed on all the nodes, but you might want to
 submit an R job, that is to be run _only_ on the master node (the last thing you
 want is a mapreduce job submitted from all the worker nodes!)
 
-(1). Keep your files in a S3 bucket (you can also keep your files on that can be
+1. Keep your files in a S3 bucket (you can also keep your files on that can be
    accessed with ``wget`` or ``curl`` etc), lets say
    ``s3://sguhaoutput/tmp/one``
-(2). Create a shell file with the following code (save it in ``s3://sguhaoutput/tmp/one/sh-driver.sh``)
-```sh
-    IS_MASTER=true
-    if [ -f /mnt/var/lib/info/instance.json ]
-    then
-        IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
-    fi
-     
-    if [ "$IS_MASTER" = false ]; then
-     exit
-    fi
-     
-    ## If we are here , this is the master node.
-    ## Sync the s3 bucket and run the R job
-    aws s3 sync s3://sguhaoutput/tmp/one ./one/
-    R CMD BATCH ./one/rdriver.R ./one/rdriver.log
-```
-(3). Run the script. The following code will download the shell file and execute
+
+2. Create a shell file with the following code (save it in ``s3://sguhaoutput/tmp/one/sh-driver.sh``)
+
+
+      IS_MASTER=true
+      if [ -f /mnt/var/lib/info/instance.json ]
+      then
+          IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
+      fi
+    
+      if [ "$IS_MASTER" = false ]; then
+       exit
+      fi
+    
+      ## If we are here , this is the master node.
+      ## Sync the s3 bucket and run the R job
+      aws s3 sync s3://sguhaoutput/tmp/one ./one/
+      R CMD BATCH ./one/rdriver.R ./one/rdriver.log
+
+3. Run the script. The following code will download the shell file and execute
    it. As you can see from step(2), this file will a)run only if it's on the
    master node and b) then sync the rest of the files c) start the R job
-```sh
-    cl <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R Job", wait=TRUE)
-```
-(4). The R console will wait  till the job fails or succeeds. Upon completion, you can
+
+    cl <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R
+    Job", wait=TRUE)
+
+4. The code will continue the job fails or succeeds. Upon completion, you can
    check the status of the job. 
 
     
