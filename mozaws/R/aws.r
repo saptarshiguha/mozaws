@@ -81,7 +81,8 @@ makeNiceString <- function(s,awsOpts){
 #' @param timeout over timeout from the options (minutes)
 #' @param verbose be catty?
 #' @param emrfs turns on emrfs and consistency
-#' @param customscript a character vector of EMR 'steps' to run. These could be shell files which are downloaded and executed (see \code{aws.step.run}). The format is a named vector. 
+#' @param steps a character vector of EMR 'steps' to run. These could be shell files which are downloaded and executed (see \code{aws.step.run}). The format is a named vector.
+#' @param bsactions a character vector of bootstrap actions formatted according to \code{aws emr create-cluster help}
 #' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
 #' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries
 #' @details The arguments \code{hadoopops, timeout, customscript} can
@@ -104,7 +105,7 @@ makeNiceString <- function(s,awsOpts){
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL
                            ,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,customscript=NULL,wait=FALSE,spark=FALSE){
+                           ,steps=NULL,bsactions=NULL,wait=FALSE,spark=FALSE){
     awsOpts <- aws.options()
     checkIfStarted()
     getWT <- function(s,k){
@@ -124,18 +125,19 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL
     hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
     timeout <- if(is.null(timeout)) timeout else awsOpts$timeout
     if(emrfs) emrfs="--emrfs Consistent=true" else emrfs=""
-    if(!is.na(customscript)){
-        customscript <- makeNiceString(customscript,awsOpts)
+    if(!is.na(steps)){
+        customscript <- makeNiceString(steps,awsOpts)
     }else customscript=""
+    otherbs <- if(!is.null(bsactions)) paste(basactions,collapse=" ") else ""
     if(spark)
         sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a']")
     else
         sparkb <- ""
     args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri
-                ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],sparkb=sparkb
+                ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],sparkb=sparkb,otherbs=otherbs
                 ,workertype=workers[[2]],hadoopargs=hadoopargs, uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI"))
                 ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket)
-    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{sparkb}}  --steps Type=CUSTOM_JAR,Name='Permissions',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
+    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{sparkb}} {{otherbs}}  --steps Type=CUSTOM_JAR,Name='Permissions',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
     res <- presult(system(template, intern=TRUE))

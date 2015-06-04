@@ -1,5 +1,3 @@
-* auto-gen TOC:
-{:toc}
 
 # Introduction #
 
@@ -109,9 +107,9 @@ If you dont want spark,
 
     cl <- aws.clus.create(workers=5, wait=TRUE, customscript=c(rpackages = "s3://mozillametricsemrscripts/r.step.sh"))
 
-For spark,
+For spark _and_ Mozilla Spark Telemetry libraries,it is slightly different since ``telemetry.sh`` is supposed to be run as a bootstrap script.
 
-    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,customscript=c(sparkmoz = "s3://telemetry-spark-emr/telemetry.sh"))
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE, bsactions="Path='s3://telemetry-spark-emr/telemetry.sh'")
 
 Note, Spark and Hadoop MapReduce *will not work together*. If you choose Spark,
 then you must use Spark for all your distributed computations. Coming soon, we
@@ -120,11 +118,14 @@ data using Spark and R as opposed to Spark and Python. Good times are
 ahead. Have fortitude.
 
 
-To have R packages too, you can try something like this
+To have R packages and just Spark
 
-    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,customscript=c(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"
-                                                                         ,sparkmoz = "s3://telemetry-spark-emr/telemetry.sh"))
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,customscript=c(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
+                                                                         
+To have R packages, Spark, and Mozilla Spark libraries 
 
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE,bsactions="Path='s3://telemetry-spark-emr/telemetry.sh'"
+                          ,customscript=c(rpackages = "https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
 
 ## Describe the Cluster
 Once you've done the above, calling ``aws.clus.info`` will return detailed
