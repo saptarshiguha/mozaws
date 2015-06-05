@@ -6,7 +6,7 @@ library(data.table)
 options(mzaws=list(
             init       = FALSE,
             awscli     = "aws",
-            amiversion = "3.6.0",
+            amiversion = "3.3.2",
             timeout    = "2880",
             loguri     = NA,
             numworkers = 3,

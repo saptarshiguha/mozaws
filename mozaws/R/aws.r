@@ -163,7 +163,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
                 ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb
                 ,workertype=workers[[2]],hadoopargs=hadoopargs, uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI"))
                 ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket)
-    template = "{{awscli}} emr create-cluster {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}' --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} {{otherbs}} --steps Type=CUSTOM_JAR,Name='Perms',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
+    template = "{{awscli}} emr create-cluster --use-default-roles {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}'  --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} {{otherbs}} --steps Type=CUSTOM_JAR,Name='Perms',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
     res <- presult(system(template, intern=TRUE))
@@ -420,4 +420,15 @@ aws.list.groups <- function(cl,reqGt0=TRUE){
 
 #' Returns AWS options
 #' @export
-aws.options <- function() options("mzaws")[[1]]
+aws.options <- function(...) {
+  l <- list(...)
+if (length(l)==0){
+  return(options("mzaws")[[1]])
+}
+ x = options("mzaws")[[1]]
+ for(a in names(l)){
+   x[[a]] <- l[[a]]
+}
+options(mzaws=x)
+  x
+}
