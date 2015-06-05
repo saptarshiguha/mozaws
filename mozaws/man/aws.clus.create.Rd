@@ -5,7 +5,7 @@
 \usage{
 aws.clus.create(name = NULL, workers = NULL, master = NULL,
   hadoopops = NULL, timeout = NULL, verbose = FALSE, emrfs = FALSE,
-  customscript = NULL, wait = FALSE, spark = FALSE)
+  steps = NULL, bsactions = NULL, wait = FALSE, spark = FALSE)
 }
 \arguments{
 \item{name}{is the name of the cluster, if not provided one will be created for you}
@@ -22,11 +22,13 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 
 \item{emrfs}{turns on emrfs and consistency}
 
-\item{customscript}{override options}
+\item{steps}{a character vector of EMR 'steps' to run. These could be shell files which are downloaded and executed (see \code{aws.step.run}). The format is a named vector.}
+
+\item{bsactions}{a character vector of bootstrap actions formatted according to \code{aws emr create-cluster help}}
 
 \item{wait}{TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits}
 
-\item{spark}{if TRUE will start a spark interactive cluster. If a spark cluster is used, you cannot write interactive hadoop jobs.}
+\item{spark}{TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries}
 }
 \description{
 Create a cluster

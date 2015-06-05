@@ -1,3 +1,4 @@
+
 # Introduction #
 
 With this package the user can create AWS clusters. Control the world. No. It
@@ -36,8 +37,7 @@ platforms, the initialization is slightly different because (it appears) that
 when calling ``aws`` though R's ``system`` call, it can't find the configuration
 file. So, the initialization is something like
 
-    aws.init(ec2key="sguhaMozillaWest2",localpubkey="path-pubkey",opts=list(awscli="aws
-    --region us-west-2 --output json ")
+    aws.init(ec2key="sguhaMozillaWest2",localpubkey="path-pubkey",opts=list(awscli="aws --region us-west-2 --output json ")
 
 (You _must_ have the ``--output json`` (this package wont work otherwise), the
 region could be different)
@@ -45,13 +45,9 @@ region could be different)
 You can set many options through this function. For example, to set the default
 number of workers and to run a file across all the nodes at cluster startup time,
 
-    aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5,
-    customscript='https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh'))
-
+    aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5, steps=list('https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh')))
     aws.init(localpubkey="~/.ssh/id_dsa.pub",opts=list(numworkers=5,inst.type  = c(worker="c3.xlarge",master="c3.xlarge")))
 
-
-View the options using the function ``aws.options()``.
 
 ## Before Starting
 Before you start the cluster, notice the value of
@@ -67,6 +63,9 @@ The value _mozillametricsemrscripts_ will need to be changed to S3 bucket you
 have read/write permissions to. Once done, change these values in the
 options. And you need to copy all the files in ``bootscriptsAndR`` to
 this S3 bucket.
+
+View the options using the function ``aws.options()``.
+
 
 ## Start a Cluster
 Simple enough. This will create a cluster with the default number of workers and
@@ -86,7 +85,37 @@ Different number of workers, and worker types?
 Run a R script (or any shell script) after cluster startup (and kill the cluster
 after one day)
 
-    cl <- aws.clus(workers=1, timeout=1440,customscript="https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh")
+    cl <- aws.clus(workers=1, timeout=1440,steps=list("https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"),wait=TRUE)
+
+And a spark cluster? This just installs Spark and you can write python Spark jobs.
+
+    cl <- aws.clus.create(workers=5,spark=TRUE, wait=TRUE)
+
+These clusters will not have RHIPE on them. For that we have another step. See the file _kickstartrhipe.sh_ for what is bootstrapped.
+
+### For the Mozilla Metrics Team
+
+You will want either a lot of R packages, RHIPE and/or Mozilla's Spark libraries
+for telemetry. It's easy enough. We haven't described the commands, but they are
+described at the end of this page.
+
+As above, call the ``aws.init``, then create a cluster, wait for it to end and then run some steps which will install RHIPE and/or Mozilla telemetry libraries
+
+    aws.init(ec2key="something", localpubkey="path-to-pubkey", opts=list(loguri= "s3://mozillametricsemrscripts/logs",s3bucket= "mozillametricsemrscripts"))
+
+If you *don't want spark*,
+
+    cl <- aws.clus.create(workers=5, wait=TRUE, bsactions=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"))
+
+For spark _and_ Mozilla Spark Telemetry libraries,
+
+    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE, bsactions=list(MozSpark='s3://telemetry-spark-emr/telemetry.sh'))
+
+Note, Spark and Hadoop MapReduce *will not work together*. If you choose Spark,
+then you must use Spark for all your distributed computations. Coming soon, we
+will have Spark-R packages. With this package you can compute with Telemetry
+data using Spark and R as opposed to Spark and Python. Good times are
+ahead. Have fortitude.
 
 ## Describe the Cluster
 Once you've done the above, calling ``aws.clus.info`` will return detailed
@@ -183,8 +212,7 @@ example of one such script can be found at
 . To launch a script(which are also called _steps_ in AWS land), type
 
     cl <- aws.step.run(cl,
-    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",
-    ,name="Install R Package",wait=TRUE)
+    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",name="Install R Package",wait=TRUE)
 
 details of steps(success/failure etc) can be found in ``cl$steps``. The above
 command will return immediately when ``wait=FALSE`` is used. You can monitor the
@@ -194,41 +222,44 @@ step id (most recent first) . The 2nd parameter, must either be a ``http`` url
 ``s3://`` in which the package will use ``aws s3 cp`` to download the file. This
 file is then made executable and is started by the shell.
 
+You can pass positional arguments to scripts
+
+    cl <- aws.step.run(cl, "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",name="Install R Package",args=c(10,12,'foo 1'),wait=TRUE)
+
 ## Running Scripts on Just the Master Node
 You would want packages to be installed on all the nodes, but you might want to
 submit an R job, that is to be run _only_ on the master node (the last thing you
 want is a mapreduce job submitted from all the worker nodes!)
 
-1. Keep your files in a S3 bucket (you can also keep your files on that can be
+(1). Keep your files in a S3 bucket (you can also keep your files on that can be
    accessed with ``wget`` or ``curl`` etc), lets say
    ``s3://sguhaoutput/tmp/one``
-
-2. Create a shell file with the following code (save it in ``s3://sguhaoutput/tmp/one/sh-driver.sh``)
-
-
-      IS_MASTER=true
-      if [ -f /mnt/var/lib/info/instance.json ]
-      then
-          IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
-      fi
-    
-      if [ "$IS_MASTER" = false ]; then
-       exit
-      fi
-    
-      ## If we are here , this is the master node.
-      ## Sync the s3 bucket and run the R job
-      aws s3 sync s3://sguhaoutput/tmp/one ./one/
-      R CMD BATCH ./one/rdriver.R ./one/rdriver.log
-
-3. Run the script. The following code will download the shell file and execute
+(2). Create a shell file with the following code (save it in ``s3://sguhaoutput/tmp/one/sh-driver.sh``)
+```sh
+    IS_MASTER=true
+    if [ -f /mnt/var/lib/info/instance.json ]
+    then
+        IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
+    fi
+     
+    if [ "$IS_MASTER" = false ]; then
+     exit
+    fi
+     
+    ## If we are here , this is the master node.
+    ## Sync the s3 bucket and run the R job
+    aws s3 sync s3://sguhaoutput/tmp/one ./one/
+    R CMD BATCH ./one/rdriver.R ./one/rdriver.log
+```
+(3). Run the script. The following code will download the shell file and execute
    it. As you can see from step(2), this file will a)run only if it's on the
    master node and b) then sync the rest of the files c) start the R job
 
-    cl <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R
-    Job", wait=TRUE)
-
-4. The code will continue the job fails or succeeds. Upon completion, you can
+```sh
+     f <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R Job")
+     cl <- aws.step.wait(f[[1]],f[[2]])
+```
+    
+(4). The R console will wait  till the job fails or succeeds. Upon completion, you can
    check the status of the job. 
 
-    
