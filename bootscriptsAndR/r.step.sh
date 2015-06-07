@@ -36,16 +36,16 @@ installRstudio(){
 
 echo "R Packages...."
 sudo R CMD javareconf
-sudo mkdir -p /usr/local/rlibs
-sudo chmod -R 4777 /usr/local/rlibs/
+# sudo mkdir -p /usr/local/rlibs
+# sudo chmod -R 4777 /usr/local/rlibs/
 
-R -e 'for(x in c("devtools","rJava","roxygen2","RCurl","XML","rmarkdown")){ tryCatch(install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
-R -e 'for(x in c("Hmisc","rjson","httr","infuser")){ tryCatch(install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
+sudo -E  R -e 'for(x in c("devtools","rJava","roxygen2","RCurl","XML","rmarkdown")){ tryCatch(install.packages(x,repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
+sudo -E  R -e 'for(x in c("Hmisc","rjson","httr","infuser")){ tryCatch(install.packages(x,repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
 
 # R -e 'for(x in c("forecast","zoo","latticeExtra","mixtools","maps","lubridate")){ tryCatch(install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
 
 wget https://github.com/saptarshiguha/terrific/releases/download/1.4/rterra_1.4.tar.gz
-R CMD INSTALL -l /usr/local/rlibs/ /home/hadoop/rterra_1.4.tar.gz
+sudo -E R CMD INSTALL -l /usr/local/rlibs/ /home/hadoop/rterra_1.4.tar.gz
 
 #RHIPE
 echo "Installing Rhipe"
@@ -54,21 +54,21 @@ export RHIPE_VERSION=${ver}_hadoop-2
 wget http://ml.stat.purdue.edu/rhipebin/Rhipe_$RHIPE_VERSION.tar.gz
 export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-R CMD INSTALL -l /usr/local/rlibs/ Rhipe_$RHIPE_VERSION.tar.gz
+sudo -E R CMD INSTALL  Rhipe_$RHIPE_VERSION.tar.gz
 
 
 ## Other Packages
-R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/rhekajq')"
-R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/RAmazonS3')"
-R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('Rdatatable/data.table', build_vignettes = FALSE)"
+sudo -E R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/rhekajq')"
+sudo -E R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/RAmazonS3')"
+sudo -E R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('Rdatatable/data.table', build_vignettes = FALSE)"
 
 
 ## Teserra
-# R -e "options(unzip = 'unzip', repos = 'http://cran.rstudio.com/'); library(devtools); tryCatch(install_github('datadr', 'tesseradata'),error=function(e) print(e))"
-# R -e "options(unzip = 'unzip', repos = 'http://cran.rstudio.com/'); library(devtools); tryCatch(install_github('trelliscope', 'tesseradata'),error=function(e) print(e))"
-# R -e 'for(x in c("shiny")){ tryCatch(install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
-# R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('daattali/shinyjs')"
-# R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('hafen/housingData')"
+# sudo -E R -e "options(unzip = 'unzip', repos = 'http://cran.rstudio.com/'); library(devtools); tryCatch(install_github('datadr', 'tesseradata'),error=function(e) print(e))"
+# sudo -E R -e "options(unzip = 'unzip', repos = 'http://cran.rstudio.com/'); library(devtools); tryCatch(install_github('trelliscope', 'tesseradata'),error=function(e) print(e))"
+# sudo -E R -e 'for(x in c("shiny")){ tryCatch(install.packages(x,repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
+# sudo -E R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('daattali/shinyjs')"
+# sudo -E R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('hafen/housingData')"
 
 
 if [ "$IS_MASTER" = true ]; then

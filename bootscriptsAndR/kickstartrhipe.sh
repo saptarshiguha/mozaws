@@ -76,16 +76,16 @@ echo "R_LIBS=/usr/local/rlibs"| sudo  tee -a /usr/lib64/R/etc/Renviron
 sudo chmod -R 777 /mnt
 
 
-Y1=`Rscript -e 'cat(strsplit(readLines("/home/hadoop/.aws/config")[2],"=[ ]+")[[1]][[2]])'`
-Y2=`Rscript -e 'cat(strsplit(readLines("/home/hadoop/.aws/config")[3],"=[ ]+")[[1]][[2]])'`
-(
+# Y1=`Rscript -e 'cat(strsplit(readLines("/home/hadoop/.aws/config")[2],"=[ ]+")[[1]][[2]])'`
+# Y2=`Rscript -e 'cat(strsplit(readLines("/home/hadoop/.aws/config")[3],"=[ ]+")[[1]][[2]])'`
+# (
     
-cat <<EOF
+# cat <<EOF
 
-export AWS_ACCESS_KEY_ID=${Y1}
-export AWS_SECRET_ACCESS_KEY=${Y2}
+# export AWS_ACCESS_KEY_ID=${Y1}
+# export AWS_SECRET_ACCESS_KEY=${Y2}
 
-EOF
-) >> $MYHOME/.bashrc
+# EOF
+# ) >> $MYHOME/.bashrc
 
 cd /home/hadoop

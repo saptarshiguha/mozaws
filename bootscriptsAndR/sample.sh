@@ -7,5 +7,5 @@ then
 fi
 
 
-R -e 'install.packages("survival", repos="http://cran.cnr.Berkeley.edu",dep=TRUE)'
+sudo -E R -e 'install.packages("survival", repos="http://cran.cnr.Berkeley.edu",dep=TRUE)'
 

@@ -13,7 +13,15 @@ secondsToString <- function(secs,rnd=2){
   else if(secs< (86400*365)) sprintf("%s months",Round(secs/(86400*30),rnd))
   else  sprintf("%s years",Round(secs/(86400*365),rnd))
 }
-        
+
+
+aws.clus.list <- function(active=TRUE){
+    awsOpts <- aws.options()
+    checkIfStarted()
+    temp <- infuse("{{awscli}} emr list-clisters {{active}}",awscli=awsOpts$awscli, active=if (active) "--active")
+    presult( system(temp,intern=TRUE))$Clusters
+}
+
 #' Initialize the AWS System
 #' @param ec2key this is your EC2 key that you created in the EC2 AWS Console
 #' @param localpubkey this is for example the contents of
