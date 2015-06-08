@@ -120,6 +120,7 @@ makeNiceBS <- function(s, ...){
 #' @param bsactions a character vector of bootstrap actions formatted according to \code{aws emr create-cluster help}
 #' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
 #' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries
+#' @param opts list of options to modify string. Mysterious
 #' @details The arguments \code{hadoopops, timeout, customscript} can
 #' also be set in options. If \code{wait} is FALSE, the function will
 #' return immediately and can be monitored using
@@ -139,7 +140,7 @@ makeNiceBS <- function(s, ...){
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,steps=NULL,bsactions=NULL,wait=FALSE,spark=FALSE){
+                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,opts=NULL){
     awsOpts <- aws.options()
     checkIfStarted()
     getWT <- function(s,k){
@@ -167,11 +168,19 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
         sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a']")
     else
         sparkb <- ""
-    args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri,otherbs=otherbs
-                ,name=name, ec2key=awsOpts$ec2key,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb
-                ,workertype=workers[[2]],hadoopargs=hadoopargs, uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI"))
+    ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),opts[["ec2attributes"]]),collapse=","))
+    xtags <- local({
+        tags <- opts$tags
+        if(length(names(tags))!=length(tags)) stop("opts$tags must be a named character vector")
+        infuse("--tags user='{{uusser}}' crtr='rmozaws-1' {{rest}}",uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI")),
+               rest=paste(unlist(mapply(function(n1,n2){ sprintf("'%'s='%s'",n1,n2)}, names(tags), tags,SIMPLIFY=FALSE)),collapse=" "))
+    })
+        
+    args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri,otherbs=otherbs,ec2bits=ec2bits
+                ,name=name,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb
+                ,workertype=workers[[2]],hadoopargs=hadoopargs,tags=xtags
                 ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket)
-    template = "{{awscli}} emr create-cluster --use-default-roles {{emrfs}} --tags user='{{uusser}}' crtr=rmozaws-1 --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging --ec2-attributes KeyName='{{ec2key}}'  --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} {{otherbs}} --steps Type=CUSTOM_JAR,Name='Perms',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
+    template = "{{awscli}} emr create-cluster --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} {{otherbs}} --steps Type=CUSTOM_JAR,Name='Perms',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
     res <- presult(system(template, intern=TRUE))
@@ -324,11 +333,11 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
-    r <- presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
     while(TRUE){
+    r <- mozaws:::presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
          if(isn(r$Step$Status$State,"") %in% c("FAILED","COMPLETED")){
             ss <- r$Step$Status$State
-            if(ss=="FAILED") warning("the step failed")
+            if(ss=="FAILED") stop(sprintf("The step (id:%s name:%s) failed",r$Step$Id,r$Step$Name))
             break
         }
         cat(".")
@@ -353,6 +362,7 @@ aws.step.run <- function(cl,script,name=NULL,args=NULL,wait=TRUE){
     temp <- infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps {{scripturl}}",cid=cl$Id,awscli=awsOpts$awscli, scripturl=scripturl)
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
+    message(sprintf("Running step with Id: %s", x))
     if(wait) aws.step.wait(cl,x) else list(cl, x)
 }
 
@@ -439,4 +449,19 @@ if (length(l)==0){
 }
 options(mzaws=x)
   x
+}
+
+
+#' Installs R Packages on the cluster
+#' @param cl is the cluster object
+#' @param cran is a character vector of R packages to install from CRAN
+#' @param github is a character vector of R packages to install from GitHub
+#' @param wait wait for package installation to complete
+#' @export
+aws.package <- function(cl, cran=NULL, github=NULL, wait=TRUE){
+    awsOpts <- aws.options()
+    checkIfStarted()
+    if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
+    arg = infuse("{{cran}} {{github}}", if(!is.null(cran)) sprintf(" --cran %s", paste(cran, collapse=" ")), if(!is.null(github)) sprintf(" --github %s", paste(github, collapse=" ")))
+    aws.step.run(cl, script='s3://{{buk}}/install.packages.sh', args=arg, name="Install R Packages",wait=TRUE)
 }

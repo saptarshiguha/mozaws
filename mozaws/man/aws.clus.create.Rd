@@ -5,7 +5,8 @@
 \usage{
 aws.clus.create(name = NULL, workers = NULL, master = NULL,
   hadoopops = NULL, timeout = NULL, verbose = FALSE, emrfs = FALSE,
-  steps = NULL, bsactions = NULL, wait = FALSE, spark = FALSE)
+  steps = NULL, bsactions = NULL, wait = TRUE, spark = FALSE,
+  opts = NULL)
 }
 \arguments{
 \item{name}{is the name of the cluster, if not provided one will be created for you}
@@ -29,6 +30,8 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 \item{wait}{TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits}
 
 \item{spark}{TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries}
+
+\item{opts}{list of options to modify string. Mysterious}
 }
 \description{
 Create a cluster

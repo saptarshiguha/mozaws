@@ -73,7 +73,7 @@ default instance types
 
     cl <- aws.clus.create(wait=TRUE)
 
-By default, ``wait`` is ``FALSE``. To wait for the end of cluster startup, do
+By default, ``wait`` is ``TRUE``. To wait for the end of cluster startup, do
 
     cl <- aws.clus.wait(cl)
 
@@ -85,11 +85,11 @@ Different number of workers, and worker types?
 Run a R script (or any shell script) after cluster startup (and kill the cluster
 after one day)
 
-    cl <- aws.clus(workers=1, timeout=1440,steps=list("https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"),wait=TRUE)
+    cl <- aws.clus(workers=1, timeout=1440,steps=list("https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
 
 And a spark cluster? This just installs Spark and you can write python Spark jobs.
 
-    cl <- aws.clus.create(workers=5,spark=TRUE, wait=TRUE)
+    cl <- aws.clus.create(workers=5,spark=TRUE)
 
 These clusters will not have RHIPE on them. For that we have another step. See the file _kickstartrhipe.sh_ for what is bootstrapped.
 
@@ -105,11 +105,11 @@ As above, call the ``aws.init``, then create a cluster, wait for it to end and t
 
 If you *don't want spark*,
 
-    cl <- aws.clus.create(workers=5, wait=TRUE, bsactions=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"))
+    cl <- aws.clus.create(workers=5, bsactions=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"),opts=list(ec2attributes="InstanceProfile=mozmetricstelemetry"))
 
 For spark _and_ Mozilla Spark Telemetry libraries,
 
-    cl <- aws.clus.create(workers=5, wait=TRUE,spark=TRUE, bsactions=list(MozSpark='s3://telemetry-spark-emr/telemetry.sh'))
+    cl <- aws.clus.create(workers=5,spark=TRUE, bsactions=list(mozspark='s3://telemetry-spark-emr/telemetry.sh'),opts=list(ec2attributes="InstanceProfile=mozmetricstelemetry"))
 
 Note, Spark and Hadoop MapReduce *will not work together*. If you choose Spark,
 then you must use Spark for all your distributed computations. Coming soon, we

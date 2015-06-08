@@ -42,7 +42,7 @@ sudo R CMD javareconf
 sudo -E  R -e 'for(x in c("devtools","rJava","roxygen2","RCurl","XML","rmarkdown")){ tryCatch(install.packages(x,repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
 sudo -E  R -e 'for(x in c("Hmisc","rjson","httr","infuser")){ tryCatch(install.packages(x,repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
 
-# R -e 'for(x in c("forecast","zoo","latticeExtra","mixtools","maps","lubridate")){ tryCatch(install.packages(x,lib="/usr/local/rlibs/",repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
+# R -e 'for(x in c("forecast","zoo","latticeExtra","mixtools","maps","lubridate")){ tryCatch(install.packages(x,repos="http://cran.cnr.Berkeley.edu",dep=TRUE),error=function(e) print(e))}'
 
 wget https://github.com/saptarshiguha/terrific/releases/download/1.4/rterra_1.4.tar.gz
 sudo -E R CMD INSTALL -l /usr/local/rlibs/ /home/hadoop/rterra_1.4.tar.gz
@@ -61,6 +61,7 @@ sudo -E R CMD INSTALL  Rhipe_$RHIPE_VERSION.tar.gz
 sudo -E R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/rhekajq')"
 sudo -E R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('saptarshiguha/RAmazonS3')"
 sudo -E R -e "options(repos = 'http://cran.rstudio.com/'); library(devtools); install_github('Rdatatable/data.table', build_vignettes = FALSE)"
+sudo -E R -e "library(devtools); devtools::install_github('argparse', 'trevorld')"
 
 
 ## Teserra

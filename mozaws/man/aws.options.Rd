@@ -3,7 +3,7 @@
 \alias{aws.options}
 \title{Returns AWS options}
 \usage{
-aws.options()
+aws.options(...)
 }
 \description{
 Returns AWS options
