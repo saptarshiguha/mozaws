@@ -105,11 +105,11 @@ As above, call the ``aws.init``, then create a cluster, wait for it to end and t
 
 If you *don't want spark*,
 
-    cl <- aws.clus.create(workers=5, bsactions=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"),opts=list(ec2attributes="InstanceProfile=mozmetricstelemetry"))
+    cl <- aws.clus.create(workers=5, bsactions=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"),opts=list(ec2attributes="InstanceProfile='EMR_EC2_DefaultRole'"))
 
 For spark _and_ Mozilla Spark Telemetry libraries,
 
-    cl <- aws.clus.create(workers=5,spark=TRUE, bsactions=list(mozspark='s3://telemetry-spark-emr/telemetry.sh'),opts=list(ec2attributes="InstanceProfile=mozmetricstelemetry"))
+    cl <- aws.clus.create(workers=5,spark=TRUE, bsactions=list(mozspark='s3://telemetry-spark-emr/telemetry.sh'),opts=list(ec2attributes="InstanceProfile='EMR_EC2_DefaultRole'"))
 
 Note, Spark and Hadoop MapReduce *will not work together*. If you choose Spark,
 then you must use Spark for all your distributed computations. Coming soon, we
