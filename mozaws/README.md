@@ -105,7 +105,7 @@ As above, call the ``aws.init``, then create a cluster, wait for it to end and t
 
 If you *don't want spark*,
 
-    cl <- aws.clus.create(workers=5, bsactions=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"),opts=list(ec2attributes="InstanceProfile='EMR_EC2_DefaultRole'"))
+    cl <- aws.clus.create(workers=20, bsactions=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"),opts=list(ec2attributes="InstanceProfile='EMR_EC2_DefaultRole'"))
 
 For spark _and_ Mozilla Spark Telemetry libraries,
 
