@@ -458,7 +458,7 @@ options(mzaws=x)
 #' @param github is a character vector of R packages to install from GitHub
 #' @param wait wait for package installation to complete
 #' @export
-aws.package <- function(cl, cran=NULL, github=NULL, wait=TRUE){
+aws.rpackage <- function(cl, cran=NULL, github=NULL, wait=TRUE){
     awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")

@@ -10,4 +10,5 @@ License: Something?
 Depends:
     rjson,
     data.table,
-    devtools
+    devtools,
+    infuser
