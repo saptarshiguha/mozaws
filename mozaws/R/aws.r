@@ -119,7 +119,8 @@ makeNiceBS <- function(s, ...){
 #' @param steps a character vector of EMR 'steps' to run. These could be shell files which are downloaded and executed (see \code{aws.step.run}). The format is a named vector.
 #' @param bsactions a character vector of bootstrap actions formatted according to \code{aws emr create-cluster help}
 #' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
-#' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries
+#' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries. If equal to "mozilla" will install Mozilla's libraries.
+#' @param enableDebug TRUE or FALSE, turns on hadoop debugging
 #' @param opts list of options to modify string. Mysterious
 #' @details The arguments \code{hadoopops, timeout, customscript} can
 #' also be set in options. If \code{wait} is FALSE, the function will
@@ -136,11 +137,11 @@ makeNiceBS <- function(s, ...){
 #' \dontrun{
 #' s <- aws.clus.create(workers=1,wait=TRUE,customscript='https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh')
 #' s <- aws.clus.create(workers=1)
-#' s <- aws.clus.wait(s) 
+#' s <- aws.clus.wait(s)
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,opts=NULL){
+                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enabldeDebug=TRUE,opts=list()){
     awsOpts <- aws.options()
     checkIfStarted()
     getWT <- function(s,k){
@@ -157,17 +158,34 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     if(is.null(steps)) steps <- aws.options()$steps
     workers <- getWT(workers,"worker")
     master <- getWT(master,"master")
-    hadoopargs <- paste(c(awsOpts$hadoopops,hadoopops),collapse=",")
+    hadoopargs <- sprintf("'%s'",paste(c(awsOpts$hadoopops,hadoopops),collapse=","))
     timeout <- if(is.null(timeout)) timeout else awsOpts$timeout
     if(emrfs) emrfs="--emrfs Consistent=true" else emrfs=""
     if(!is.na(steps)){
         customscript <- makeNiceString(steps,awsOpts)
     }else customscript=""
     otherbs <- if(!is.null(bsactions)) makeNiceBS(bsactions)
-    if(spark)
-        sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.2.1.a']")
-    else
+    sparkmoz <- ""
+    if(enabldeDebug) dodebug <- "--enable-debugging" else dodebug <- ""
+    if((is.logical(spark) && spark) || is.character(spark)){
+        sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.3.1.e']")
+        hadoopConfigure <- infuse("Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}]",hadoopargs=hadoopargs)
+        if(is.character(spark)){
+            if(spark=="mozilla"){
+                sparkmoz <- infuse("Path='s3://telemetry-spark-emr-2/telemetry.sh',Args=['--public-key,{{pubkey}}']",pubkey=awsOpts$localpubkey)
+            }else{
+                sparkmoz <- spark ##provide your own
+            }
+            if(!is.null(awsOpts$ec2attributes) && is.null(opts[['ec2attributes']]))
+                opts[['ec2attributes']] <- awsOpts$ec2attributes
+        }
+        RhipeConfigure <- ""
+    } else{
         sparkb <- ""
+        hadoopConfigure <- infuse("Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}]",hadoopargs=hadoopargs)
+        RhipeConfigure <- infuse("Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}']",s3buk=awsOpts$s3bucket,
+                                 pubkey=awsOpts$localpubkey,timeout=awsOpts$timeout)
+    }
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),opts[["ec2attributes"]]),collapse=","))
     xtags <- local({
         tags <- opts$tags
@@ -175,12 +193,12 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
         infuse("--tags user='{{uusser}}' crtr='rmozaws-1' {{rest}}",uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI")),
                rest=paste(unlist(mapply(function(n1,n2){ sprintf("'%'s='%s'",n1,n2)}, names(tags), tags,SIMPLIFY=FALSE)),collapse=" "))
     })
-        
-    args <- list(awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri,otherbs=otherbs,ec2bits=ec2bits
-                ,name=name,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb
-                ,workertype=workers[[2]],hadoopargs=hadoopargs,tags=xtags
+
+    args <- list(dodebug=dodebug,awscli = awsOpts$awscli, amiversion=awsOpts$amiversion,loguri=awsOpts$loguri,otherbs=otherbs,ec2bits=ec2bits
+                ,name=name,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb,sparkmoz=sparkmoz
+                ,workertype=workers[[2]],tags=xtags,hadoopConfigure=hadoopConfigure,RhipeConfigure=RhipeConfigure
                 ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket)
-    template = "{{awscli}} emr create-cluster --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}] Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} {{otherbs}} --steps Type=CUSTOM_JAR,Name='Perms',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
+    template = "{{awscli}} emr create-cluster --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --ami-version '{{amiversion}}' --log-uri '{{loguri}}'  --name '{{name}}' {{dodebug}}  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions  {{spark}} {{sparkmoz}} {{hadoopConfigure}} {{RhipeConfigure}} {{otherbs}} --steps Type=CUSTOM_JAR,Name='Perms',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
     res <- presult(system(template, intern=TRUE))
@@ -432,7 +450,7 @@ aws.list.groups <- function(cl,reqGt0=TRUE){
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     Map(function(s) {
-        s 
+        s
         },Filter(function(s) s$InstanceGroupType=="TASK" & s$RequestedInstanceCount>0, cl$InstanceGroups))
 }
 

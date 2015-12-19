@@ -55,7 +55,7 @@ Before you start the cluster, notice the value of
     aws.options()[c("s3bucket","loguri")]
     $s3bucket
     [1] "mozillametricsemrscripts"
-     
+
     $loguri
     [1] "s3://mozillametricsemrscripts/logs"
 
@@ -69,7 +69,7 @@ View the options using the function ``aws.options()``.
 
 ## Start a Cluster
 Simple enough. This will create a cluster with the default number of workers and
-default instance types 
+default instance types
 
     cl <- aws.clus.create(wait=TRUE)
 
@@ -95,27 +95,8 @@ These clusters will not have RHIPE on them. For that we have another step. See t
 
 ### For the Mozilla Metrics Team
 
-You will want either a lot of R packages, RHIPE and/or Mozilla's Spark libraries
-for telemetry. It's easy enough. We haven't described the commands, but they are
-described at the end of this page.
+Please see [this blog post](LINK) for a description.
 
-As above, call the ``aws.init``, then create a cluster, wait for it to end and then run some steps which will install RHIPE and/or Mozilla telemetry libraries
-
-    aws.init(ec2key="something", localpubkey="path-to-pubkey", opts=list(loguri= "s3://mozillametricsemrscripts/logs",s3bucket= "mozillametricsemrscripts"))
-
-If you *don't want spark*,
-
-    cl <- aws.clus.create(workers=20, bsactions=list(rpackages = "s3://mozillametricsemrscripts/r.step.sh"),opts=list(ec2attributes="InstanceProfile='EMR_EC2_DefaultRole'"))
-
-For spark _and_ Mozilla Spark Telemetry libraries,
-
-    cl <- aws.clus.create(workers=5,spark=TRUE, bsactions=list(mozspark='s3://telemetry-spark-emr/telemetry.sh'),opts=list(ec2attributes="InstanceProfile='EMR_EC2_DefaultRole'"))
-
-Note, Spark and Hadoop MapReduce *will not work together*. If you choose Spark,
-then you must use Spark for all your distributed computations. Coming soon, we
-will have Spark-R packages. With this package you can compute with Telemetry
-data using Spark and R as opposed to Spark and Python. Good times are
-ahead. Have fortitude.
 
 ## Describe the Cluster
 Once you've done the above, calling ``aws.clus.info`` will return detailed
@@ -135,9 +116,9 @@ information. It has a customized print statement, but calling
     JobTrakcer: http://ec2-52-26-3-44.us-west-2.compute.amazonaws.com:9026 (needs a socks)
     Master Type: c3.2xlarge (and is running: TRUE)
     Core Nodes: 1 of  c3.2xlarge
-     
-     
-    https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:j-24XY7LVL8TZL9    
+
+
+    https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:j-24XY7LVL8TZL9
 
 ## Growing the Cluster
 
@@ -164,9 +145,9 @@ We can add on-demand nodes and spot nodes.
     Number of Instance Groups: 2
         ID:ig-W84RQA8PLUR9, name: 'Spot1' state:PROVISIONING requested:1 (at $0.076), running: 0
         ID:ig-2UQ1SUVODUBJX, name: 'DMD1' state:RESIZING requested:1, running: 0
-     
+
     https://us-west-2.console.aws.amazon.com/elasticmapreduce/home?region=us-west-2#cluster-details:j-24XY7LVL8TZL9
-    
+
 
 We can delete that costly On-Demand group ($0.420/hr) and add one more spot node.
 
@@ -241,11 +222,11 @@ want is a mapreduce job submitted from all the worker nodes!)
     then
         IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
     fi
-     
+
     if [ "$IS_MASTER" = false ]; then
      exit
     fi
-     
+
     ## If we are here , this is the master node.
     ## Sync the s3 bucket and run the R job
     aws s3 sync s3://sguhaoutput/tmp/one ./one/
@@ -259,7 +240,6 @@ want is a mapreduce job submitted from all the worker nodes!)
      f <- aws.step.run(cl, "s3://sguhaoutput/tmp/one/sh-driver.sh", name="R Job")
      cl <- aws.step.wait(f[[1]],f[[2]])
 ```
-    
-(4). The R console will wait  till the job fails or succeeds. Upon completion, you can
-   check the status of the job. 
 
+(4). The R console will wait  till the job fails or succeeds. Upon completion, you can
+   check the status of the job.
