@@ -85,7 +85,7 @@ Different number of workers, and worker types?
 Run a R script (or any shell script) after cluster startup (and kill the cluster
 after one day)
 
-    cl <- aws.clus(workers=1, timeout=1440,steps=list("https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample2.sh"))
+    cl <- aws.clus(workers=1, timeout=1440,steps=list("https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/sample.sh"))
 
 And a spark cluster? This just installs Spark and you can write python Spark jobs.
 
@@ -189,11 +189,11 @@ Once the cluster has started, you can submit 'scripts' to be run on all the
 nodes. For example you might want to install and R package. You also might want
 to submit a long running job and terminate the cluster after job completion. An
 example of one such script can be found at
-[https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh](https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh)
+[https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample.sh](https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample.sh)
 . To launch a script(which are also called _steps_ in AWS land), type
 
     cl <- aws.step.run(cl,
-    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",name="Install R Package",wait=TRUE)
+    "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample.sh",name="Install R Package",wait=TRUE)
 
 details of steps(success/failure etc) can be found in ``cl$steps``. The above
 command will return immediately when ``wait=FALSE`` is used. You can monitor the
@@ -205,7 +205,7 @@ file is then made executable and is started by the shell.
 
 You can pass positional arguments to scripts
 
-    cl <- aws.step.run(cl, "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample2.sh",name="Install R Package",args=c(10,12,'foo 1'),wait=TRUE)
+    cl <- aws.step.run(cl, "https://github.com/saptarshiguha/mozaws/blob/master/bootscriptsAndR/sample.sh",name="Install R Package",args=c(10,12,'foo 1'),wait=TRUE)
 
 ## Running Scripts on Just the Master Node
 You would want packages to be installed on all the nodes, but you might want to
