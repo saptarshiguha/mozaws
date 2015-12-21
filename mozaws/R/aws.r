@@ -167,6 +167,8 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     otherbs <- if(!is.null(bsactions)) makeNiceBS(bsactions)
     sparkmoz <- ""
     if(enabldeDebug) dodebug <- "--enable-debugging" else dodebug <- ""
+    if(!is.null(awsOpts$ec2attributes) && is.null(opts[['ec2attributes']]))
+        opts[['ec2attributes']] <- awsOpts$ec2attributes
     if((is.logical(spark) && spark) || is.character(spark)){
         sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.3.1.e']")
         hadoopConfigure <- infuse("Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}]",hadoopargs=hadoopargs)
@@ -176,8 +178,6 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
             }else{
                 sparkmoz <- spark ##provide your own
             }
-            if(!is.null(awsOpts$ec2attributes) && is.null(opts[['ec2attributes']]))
-                opts[['ec2attributes']] <- awsOpts$ec2attributes
         }
         RhipeConfigure <- ""
     } else{
