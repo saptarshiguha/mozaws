@@ -159,7 +159,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     workers <- getWT(workers,"worker")
     master <- getWT(master,"master")
     hadoopargs <- sprintf("'%s'",paste(c(awsOpts$hadoopops,hadoopops),collapse=","))
-    timeout <- if(is.null(timeout)) timeout else awsOpts$timeout
+    timeout <- if(!is.null(timeout)) timeout else awsOpts$timeout
     if(emrfs) emrfs="--emrfs Consistent=true" else emrfs=""
     if(!is.na(steps)){
         customscript <-  makeNiceString(steps,awsOpts)
