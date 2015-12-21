@@ -9,6 +9,14 @@ else
     echo "regular file"
     curl  $2 -o $TFILE
 fi
-R CMD BATCH $TFILE $TFILE.log --args $@{:3}
 
 
+IS_MASTER=false
+if [ -f /mnt/var/lib/info/instance.json ]
+then
+	IS_MASTER=$(jq .isMaster /mnt/var/lib/info/instance.json)
+fi
+
+if $IS_MASTER; then
+    R CMD BATCH $TFILE $TFILE.log --args $@{:3}
+fi

@@ -481,5 +481,5 @@ aws.rpackage <- function(cl, cran=NULL, github=NULL, wait=TRUE){
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
     arg = infuse("{{cran}} {{github}}", if(!is.null(cran)) sprintf(" --cran %s", paste(cran, collapse=" ")), if(!is.null(github)) sprintf(" --github %s", paste(github, collapse=" ")))
-    aws.step.run(cl, script='s3://{{buk}}/install.packages.sh', args=arg, name="Install R Packages",wait=TRUE)
+    aws.step.run(cl, script=infuse('s3://{{buk}}/install.packages.sh',buk=awsOpts$s3bucket), args=arg, name="Install R Packages",wait=TRUE)
 }
