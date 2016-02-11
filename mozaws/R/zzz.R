@@ -30,8 +30,8 @@ if(!packageVersion("infuser")>="0.2") stop("Higher Version Required")
                 c("-m","mapred.job.reuse.jvm.num.tasks=1")),
             inst.type  = c(worker="c3.4xlarge",master="c3.4xlarge"))
             )
-    
-    
+
+
     ## tryCatch({
     ##     library(infuser)
     ##     if(!packageVersion("infuser")>="0.2") stop("Higher Version Required")
@@ -39,5 +39,5 @@ if(!packageVersion("infuser")>="0.2") stop("Higher Version Required")
     ##     install_github("Bart6114/infuser")
     ##     library(infuser)
     ## })
-    
+
 }

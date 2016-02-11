@@ -17,10 +17,9 @@ for(x in args){
         if(GH) gh <- c(gh,x)
     }
 }
-for(p in cran) install.packages(p, repos="http://cran.cnr.Berkeley.edu",deps=TRUE)
-library(devtools); 
+for(p in cran) install.packages(p, repos="http://cran.cnr.Berkeley.edu",dependencies=TRUE)
+library(devtools);
 for(p in gh) install_github(p)
 EOF
 
 sudo -E Rscript $TFILE $@
-

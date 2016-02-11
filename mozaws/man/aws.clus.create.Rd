@@ -8,6 +8,7 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
   hadoopops = NULL, timeout = NULL, verbose = FALSE, emrfs = FALSE,
   steps = NULL, bsactions = NULL, wait = TRUE, spark = FALSE,
   applications = c("Hadoop", "Spark"), opts = NULL)
+  enabldeDebug = TRUE, opts = list())
 }
 \arguments{
 \item{name}{is the name of the cluster, if not provided one will be created for you}
@@ -33,8 +34,9 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 \item{spark}{TRUE or FALSE will install Mozilla's Telemetry libraries}
 
 \item{applications}{one or more of  Hadoop, Spark, Hue, Hive, Pig, HBase, Ganglia and Impala (default Hadoop and Spark)}
-
 \item{opts}{list of options to modify string. Mysterious}
+
+\item{enableDebug}{TRUE or FALSE, turns on hadoop debugging}
 }
 \description{
 Create a cluster
