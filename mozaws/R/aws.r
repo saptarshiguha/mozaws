@@ -124,7 +124,6 @@ makeNiceBS <- function(s, ...){
 #' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
 #' @param spark TRUE or FALSE will install Mozilla's Telemetry libraries
 #' @param applications one or more of  Hadoop, Spark, Hue, Hive, Pig, HBase, Ganglia and Impala (default Hadoop and Spark)
-=======
 #' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries. If equal to "mozilla" will install Mozilla's libraries.
 #' @param enableDebug TRUE or FALSE, turns on hadoop debugging
 #' @param opts list of options to modify string. Mysterious
