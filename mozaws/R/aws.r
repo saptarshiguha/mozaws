@@ -125,7 +125,7 @@ makeNiceBS <- function(s, ...){
 #' @param spark TRUE or FALSE will install Mozilla's Telemetry libraries
 #' @param applications one or more of  Hadoop, Spark, Hue, Hive, Pig, HBase, Ganglia and Impala (default Hadoop and Spark)
 #' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries. If equal to "mozilla" will install Mozilla's libraries.
-#' @param enableDebug TRUE or FALSE, turns on hadoop debugging
+#' @param enableDebug TRUE or FALSE(FALSE), turns on hadoop debugging
 #' @param opts list of options to modify string. Mysterious
 #' @details The arguments \code{hadoopops, timeout, customscript} can
 #' also be set in options. If \code{wait} is FALSE, the function will
@@ -146,7 +146,7 @@ makeNiceBS <- function(s, ...){
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,applications=c("Hadoop","Spark"),opts=NULL){
+                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Hadoop","Spark"),opts=NULL){
     awsOpts <- aws.options()
     ## todo overide awsOpts with opts
     checkIfStarted()
