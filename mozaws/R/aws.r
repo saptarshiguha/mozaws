@@ -179,7 +179,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     }else applications=""
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
     sparkmoz <- ""
-    if(enabldeDebug) dodebug <- "--enable-debugging" else dodebug <- ""
+    if(enableDebug) dodebug <- "--enable-debugging" else dodebug <- ""
     if(!is.null(awsOpts$ec2attributes) && is.null(opts[['ec2attributes']]))
         opts[['ec2attributes']] <- awsOpts$ec2attributes
     if((is.logical(spark) && spark) || is.character(spark)){
