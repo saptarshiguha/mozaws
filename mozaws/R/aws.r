@@ -148,6 +148,9 @@ makeNiceBS <- function(s, ...){
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
                            ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Hadoop","Spark"),opts=NULL){
     awsOpts <- aws.options()
+    for(n in names(opts)){
+        awsOpts[[n]] <- opts[[n]]
+    }
     ## todo overide awsOpts with opts
     checkIfStarted()
     getWT <- function(s,k){
@@ -180,31 +183,19 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
     sparkmoz <- ""
     if(enableDebug) dodebug <- "--enable-debugging" else dodebug <- ""
-    if(!is.null(awsOpts$ec2attributes) && is.null(opts[['ec2attributes']]))
-        opts[['ec2attributes']] <- awsOpts$ec2attributes
-    if((is.logical(spark) && spark) || is.character(spark)){
-        sparkb <- infuse("Path='s3://support.elasticmapreduce/spark/install-spark',Args=['-v,1.3.1.e']")
-        hadoopConfigure <- infuse("Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}]",hadoopargs=hadoopargs)
-        if(is.character(spark)){
-            if(spark=="mozilla"){
-                sparkmoz <- infuse("Path='s3://telemetry-spark-emr-2/telemetry.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}']",pubkey=awsOpts$localpubkey,timeout=timeout)
-            }else{
-                sparkmoz <- spark ##provide your own
-            }
-        }
-        RhipeConfigure <- ""
-    } else{
-        sparkb <- ""
-        hadoopConfigure <- infuse("Path='s3://elasticmapreduce/bootstrap-actions/configure-hadoop',Args=[{{hadoopargs}}]",hadoopargs=hadoopargs)
-        RhipeConfigure <- infuse("Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}']",s3buk=awsOpts$s3bucket,
-                                 pubkey=awsOpts$localpubkey,timeout=timeout)
-    }
-    ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),opts[["ec2attributes"]]),collapse=","))
+    RhipeConfigure <- infuse("Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}']",s3buk=awsOpts$s3bucket,
+                             pubkey=awsOpts$localpubkey,timeout=timeout)
+    
+    ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
     xtags <- local({
-        tags <- opts$tags
-        if(length(names(tags))!=length(tags)) stop("opts$tags must be a named character vector")
-        infuse("--tags user='{{uusser}}' crtr='rmozaws-1' {{rest}}",uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI")),
-               rest=paste(unlist(mapply(function(n1,n2){ sprintf("'%'s='%s'",n1,n2)}, names(tags), tags,SIMPLIFY=FALSE)),collapse=" "))
+        tags <- awsOpts$tags
+        if(is.null(tags)) rest=""
+        if(length(names(tags))!=length(tags)){
+            stop("opts$tags must be a named character vector")
+        }else{
+            rest=paste(unlist(mapply(function(n1,n2){ sprintf("'%s'='%s'",n1,n2)}, names(tags), tags,SIMPLIFY=FALSE)),collapse=" ")
+        }
+        infuse("--tags user='{{uusser}}' crtr='rmozaws-1' {{rest}}",uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI")),rest=rest)
     })
     if(!is.na(awsOpts$configfile)) configfile <- sprintf("--configurations %s" , awsOpts$configfile) else configfile <- ""
     args <- list(awscli = awsOpts$awscli, releaselabel=awsOpts$releaselabel,loguri=awsOpts$loguri,otherbs=otherbs,ec2bits=ec2bits
