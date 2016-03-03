@@ -175,7 +175,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     }else customscript=""
     otherbs <- if(!is.null(bsactions)) makeNiceBS(bsactions)
     if(spark==TRUE){
-        sparkb <- infuse("Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh'")
+        sparkb <- "Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh'"
     }else sparkb <- ""
     if(length(applications)>0){
         applications = sprintf("--applications %s",paste("Name=", applications,sep="",collapse= " "))
