@@ -146,7 +146,7 @@ makeNiceBS <- function(s, ...){
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Hadoop","Spark"),opts=NULL){
+                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Hadoop","Hive","Spark"),opts=NULL){
     awsOpts <- aws.options()
     for(n in names(opts)){
         awsOpts[[n]] <- opts[[n]]
