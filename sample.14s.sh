@@ -8,7 +8,7 @@ suppressMessages(aws.init(ec2key="mozilla_vitillo"
                       ,ec2attributes = "InstanceProfile='telemetry-spark-cloudformation-TelemetrySparkInstanceProfile-1SATUBVEXG7E3'"
                       ,configfile="https://s3-us-west-2.amazonaws.com/telemetry-spark-emr-2/configuration/configuration.json"
                      )))
-load("/tmp/x")
+load("/tmp/spz")
 ssh <- sprintf("ssh hadoop@%s",cl$MasterPublicDnsName)
 y <- makeProgressString(remote=ssh)
 if(is.null(y) || length(y)==0 || y=="") {

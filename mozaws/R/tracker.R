@@ -156,7 +156,7 @@ makeProgressString <- function(appid,remotenode, port=4040){
     js <- head(X[status=="RUNNING",],1)
     if(nrow(js)==0) return(NULL)
     s1 <- "App:{{app}} Job[id:{{id}}, name:'{{name}}'] started at: {{start}}, duration: {{dura}} min"
-    s2 <- "Tasks(c,f/all,%): {{tdone}},{{tfail}}/{{tall}},{{tpct}} Stages(c,f/all,%): {{sdone}},{{sfail}}/{{sall}},{{spct}}"
+    s2 <- "Tasks(c,f/all,%): {{tdone}},{{tfail}}/{{tall}},{{tpct}}% Stages(c,f/all,%): {{sdone}},{{sfail}}/{{sall}},{{spct}}%"
     u <- list( app=appid,id = js$id, name=js$name, start=js$started, dura = if(is.na(js$end)) round(as.numeric(Sys.time() - js$started,"mins"),2) else round(as.numeric(j$end- js$started,"mins"),2),
          tdone=js$tComplete, tfail=js$tFailed, tall=js$tTasks, tpct=round(js$tComplete/js$tTasks*100,1),
          sdone = js$sComplete, sfail =js$sFailed, sall = length(js$stageId[[1]]), spct=round(js$sComplete/length(js$stageId[[1]])*100,1))
