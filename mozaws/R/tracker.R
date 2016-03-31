@@ -139,15 +139,17 @@ makeProgressString <- function(appid,remotenode, port=4040){
     if(missing(appid)) appid <- getAppId(remotenode,port)
     js <- head(scJobsForApplication(appid,remotenode, port)[status=="RUNNING",],1)
     if(nrow(js)==0) return(NULL)
-    s1 <- "App:{{app}} Job[id:{{id}}, name:'{{name}}'] started at: {{start}}, duration: {{dura}} min\nTasks(c,f/all,%): {{tdone}},{{tfail}}/{{tall}},{{tpct}} Stages(c,f/all,%): {{sdone}},{{sfail}}/{{sall}},{{spct}}\n"
+    s1 <- "App:{{app}} Job[id:{{id}}, name:'{{name}}'] started at: {{start}}, duration: {{dura}} min"
+    s2 <- "Tasks(c,f/all,%): {{tdone}},{{tfail}}/{{tall}},{{tpct}} Stages(c,f/all,%): {{sdone}},{{sfail}}/{{sall}},{{spct}}"
     u <- list( app=appid,id = js$id, name=js$name, start=js$started, dura = if(is.na(js$end)) round(as.numeric(Sys.time() - js$started,"mins"),2) else round(as.numeric(j$end- js$started,"mins"),2),
          tdone=js$tComplete, tfail=js$tFailed, tall=js$tTasks, tpct=round(js$tComplete/js$tTasks*100,1),
          sdone = js$sComplete, sfail =js$sFailed, sall = length(js$stageId[[1]]), spct=round(js$sComplete/length(js$stageId[[1]])*100,1))
-    u <- infuse(s1, key_value_list=u)
+    s1 <- infuse(s1, key_value_list=u)
+    s2 <- infuse(s2,key_value_list=u)
     sgs <- js$stageId[[1]]
     sg <- scStages(appid,remotenode,port)
-    j <- paste(capture.output(print(sg[stageId %in% sgs,])),collapse="\n")
-    (sprintf("%s%s",u,j))
+    j <- capture.output(print(sg[stageId %in% sgs,]))
+    c(s1,s2,j)
 }
 
 monitorCurrentSparkApplication <- function(cl,port=4040, mon.sec=5){
@@ -166,16 +168,15 @@ monitorCurrentSparkApplication <- function(cl,port=4040, mon.sec=5){
         if (is.na(width)) 
             width <- getOption("width") + nchar(getOption("prompt"))
         if (exists("allTxt")) {
-            nr <- sum(ceiling((1+nchar(allTxt))/width))
+            nr <- sum(ceiling((nchar(allTxt))/width))
         }
         if (nr > 0) {
             esc <- paste("\033[", nr, "A100\033[", width, "D", sep = "")
             cat(esc)
         }
-        msg <- makeProgressString(appid, ssh,port)
-        if(is.null(msg)) 
-            msg <- sprintf("[%s] No jobs running on %s", Sys.time(), appid)
-        allTxt <- msg
+        allTxt <- makeProgressString(appid, ssh,port)
+        if(is.null(allTxt)) 
+            allTxt <- sprintf("[%s] No jobs running on %s", Sys.time(), appid)
         cat(allTxt, sep = "\n")
         flush.console()
         Sys.sleep(max(1, as.integer(mon.sec)))
