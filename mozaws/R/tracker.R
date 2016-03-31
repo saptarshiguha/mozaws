@@ -156,8 +156,8 @@ makeProgressString <- function(appid,remotenode, port=4040){
     u <- list( app=appid,id = js$id, name=js$name, start=js$started, dura = if(is.na(js$end)) round(as.numeric(Sys.time() - js$started,"mins"),2) else round(as.numeric(j$end- js$started,"mins"),2),
          tdone=js$tComplete, tfail=js$tFailed, tall=js$tTasks, tpct=round(js$tComplete/js$tTasks*100,1),
          sdone = js$sComplete, sfail =js$sFailed, sall = length(js$stageId[[1]]), spct=round(js$sComplete/length(js$stageId[[1]])*100,1))
-    s1 <- infuse(s1, key_value_list=u)
-    s2 <- infuse(s2,key_value_list=u)
+    s1 <- infuse(s1, u)
+    s2 <- infuse(s2,u)
     sgs <- js$stageId[[1]]
     sg <- scStages(appid,remotenode,port)
     j <- capture.output(print(sg[stageId %in% sgs,]))
