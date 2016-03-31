@@ -211,7 +211,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     options(mzaws=awsOpts)
     k <- list(Id=res$ClusterId,Name=name)
     class(k) <- "awsCluster"
-    if(wait){
+    g <- if(wait){
         res <- (aws.clus.wait(k))
         ## States: http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/ProcessingCycle.html
         if(!(isn(res$Status$State,"") %in% c("RUNNING","WAITING"))) { print(res);stop(sprintf("Cluster: %s Might Not have Started", res$Id))}
@@ -219,6 +219,11 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     }else{
         k
     }
+    X <- list(cl=g, ssh=sprintf("ssh -o ConnectTimeout=7 hadoop@%s",g$MasterPublicDnsName))
+    gg <- options("mozremote")[[1]]
+    if(is.null(gg)) gg <-  X else gg <- append(gg,X)
+    options(mozremote = gg)
+    g
 }
 
 #' Converts a cluster-id string into a cluster object

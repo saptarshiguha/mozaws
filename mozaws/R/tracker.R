@@ -12,10 +12,24 @@ getAppId <- function(remotenode,port){
         x[!x$done,][,id[1]]
 }
         
+##' Get all applications that talk to spark 
+##' @param remotenode a string that is used to talk to the spark server like a ssh command string. See details
+##' @param port default is 4040 (current running application) or the history server 18080
+##' @param verbose default is FALSE, when TRUE prints out the main curl command
+##' @details Typically the remotenode command is a ssh command which will run a curl query on the remote. See examples.
+##' If \code{remotenode} is missing, it will be taken from the last value in  \code{options('mozremote')}.
+##' See \href{http://spark.apache.org/docs/latest/monitoring.html} for more details
+##' @examples
+#' \dontrun{
+#' cl <- aws.clus.create(workers=2,spark=TRUE,ver=TRUE)
+#' scApplicationList(remote=sprintf("ssh hadoop ATSIGN %s",cl$MasterPublicDnsName))
+#' scApplicationList() ## takes remote from options("mozremote") which gets populated by aws.clus.create
+#' scApplicationList(remotenode="sh -c") ## If you wish to run this on the remote AWS console, then call
+#' }
 ##' @export
 scApplicationList <- function(remotenode,port=4040,verbose=FALSE){
     ## 18080 for history
-    if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
+    if(missing(remotenode)) remotenode <- tail(options("mozremote")[[1]],1)[[1]]$ssh
     x<-infuse("{{SSH}} 'curl -L -H \"Accept: application/json\" http://localhost:{{port}}/api/v1/applications 2>/dev/null' 2>/dev/null",port=port,SSH=remotenode)
     if(verbose) print(x)
     l <- paste(system(x, intern=TRUE),collapse="\n")
@@ -35,9 +49,14 @@ scApplicationList <- function(remotenode,port=4040,verbose=FALSE){
     y
 }
 
+##' Get a list of all jobs that were run on the application
+##' @param appid is an application id taken from \code{scApplicationList}. It can be missing anf if is so, it will be taken from the first currently running application
+##' @param remotenode see \code{scApplicationList}.
+##' @param port is 4040
+##' @param verbose set to TRUE for actual command run
 ##' @export
 scJobsForApplication <- function(appid,remotenode,port=4040,verbose=FALSE){
-    if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
+    if(missing(remotenode)) remotenode <- tail(options("mozremote")[[1]],1)[[1]]$ssh
     if(missing(appid)) appid <- getAppId(remotenode,port)
     l <- paste(system(x <- infuse("{{SSH}} 'curl -L  -H \"Accept: application/json\" http://localhost:{{port}}/api/v1/applications/{{appid}}/jobs 2>/dev/null' 2>/dev/null",port=port,SSH=remotenode,appid=appid), intern=TRUE),collapse="\n")
     if(verbose) print(x)
@@ -121,10 +140,14 @@ HRNumber <- function(s){
     s
 }
 
-
+##' Get all stages run on this application
+##' @param appid is an application id taken from \code{scApplicationList}. It can be missing anf if is so, it will be taken from the first currently running application
+##' @param remotenode see \code{scApplicationList}
+##' @param port is 4040
+##' @param verbose set to TRUE for the command
 ##' @export
 scStages <- function(appid,remotenode,port=4040,verbose=FALSE){
-    if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
+    if(missing(remotenode)) remotenode <- tail(options("mozremote")[[1]],1)[[1]]$ssh
     if(missing(appid)) appid <- getAppId(remotenode,port)
     l <- (paste(system(x<-infuse(" {{SSH}} 'curl -L  -H \"Accept: application/json\" http://localhost:{{port}}/api/v1/applications/{{appid}}/stages 2>/dev/null' 2>/dev/null",port=port,SSH=remotenode,appid=appid), intern=TRUE),collapse="\n"))
     if(verbose) print(x)
@@ -147,9 +170,13 @@ scStages <- function(appid,remotenode,port=4040,verbose=FALSE){
 }
 
 
+##' creates string for tracking progress of the job
+##' @param appid is an application id taken from \code{scApplicationList}. It can be missing anf if is so, it will be taken from the first currently running application
+##' @param remotenode see \code{scApplicationList}
+##' @param port is 4040
 ##' @export
 makeProgressString <- function(appid,remotenode, port=4040){
-    if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
+    if(missing(remotenode)) remotenode <- tail(options("mozremote")[[1]],1)[[1]]$ssh
     if(missing(appid)) appid <- getAppId(remotenode,port)
     X <- scJobsForApplication(appid,remotenode, port)
     if(nrow(X)==0) return(NULL)
@@ -168,6 +195,10 @@ makeProgressString <- function(appid,remotenode, port=4040){
     c(s1,s2,j)
 }
 
+##' Will always run and update with the currently running job
+##' @param cl is the output from \code{aws.clus.create}
+##' @param port is 4040
+##' @param mon.sec is the update frequency
 ##' @export
 monitorCurrentSparkApplication <- function(cl,port=4040, mon.sec=5){
     ssh <- sprintf("ssh hadoop@%s",cl$MasterPublicDnsName)
