@@ -7,8 +7,8 @@
 aws.clus.create(name = NULL, workers = NULL, master = NULL,
   hadoopops = NULL, timeout = NULL, verbose = FALSE, emrfs = FALSE,
   steps = NULL, bsactions = NULL, wait = TRUE, spark = FALSE,
-  applications = c("Hadoop", "Spark"), opts = NULL)
-  enabldeDebug = TRUE, opts = list())
+  enableDebug = FALSE, applications = c("Hadoop", "Hive", "Spark"),
+  opts = NULL)
 }
 \arguments{
 \item{name}{is the name of the cluster, if not provided one will be created for you}
@@ -25,7 +25,7 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 
 \item{emrfs}{turns on emrfs and consistency}
 
-\item{steps}{a character vector of EMR 'steps' to run. These could be shell files which are downloaded and executed (see \code{aws.step.run}). The format is a named vector.}
+\item{steps}{a list of character vector of EMR 'steps' to run. These could be shell files which are downloaded and executed (see \code{aws.step.run}). The format is a named vector.}
 
 \item{bsactions}{a character vector of bootstrap actions formatted according to \code{aws emr create-cluster help}}
 
@@ -33,10 +33,13 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 
 \item{spark}{TRUE or FALSE will install Mozilla's Telemetry libraries}
 
+\item{enableDebug}{TRUE or FALSE(FALSE), turns on hadoop debugging}
+
 \item{applications}{one or more of  Hadoop, Spark, Hue, Hive, Pig, HBase, Ganglia and Impala (default Hadoop and Spark)}
+
 \item{opts}{list of options to modify string. Mysterious}
 
-\item{enableDebug}{TRUE or FALSE, turns on hadoop debugging}
+\item{spark}{TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries. If equal to "mozilla" will install Mozilla's libraries.}
 }
 \description{
 Create a cluster

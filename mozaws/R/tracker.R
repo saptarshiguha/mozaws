@@ -12,6 +12,7 @@ getAppId <- function(remotenode,port){
         x[!x$done,][,id[1]]
 }
         
+##' @export
 scApplicationList <- function(remotenode,port=4040,verbose=FALSE){
     ## 18080 for history
     if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
@@ -33,6 +34,7 @@ scApplicationList <- function(remotenode,port=4040,verbose=FALSE){
     y
 }
 
+##' @export
 scJobsForApplication <- function(appid,remotenode,port=4040,verbose=FALSE){
     if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
     if(missing(appid)) appid <- getAppId(remotenode,port)
@@ -66,6 +68,7 @@ scJobsForApplication <- function(appid,remotenode,port=4040,verbose=FALSE){
     },a))[order(-started),]
 }    
 
+##' @export
 as.character.HRBytes <- function(s0){
     s0 <- as.numeric(s0)
     sapply(s0,function(s){
@@ -75,19 +78,24 @@ as.character.HRBytes <- function(s0){
         else sprintf("%s GB",formatC(round(s/1024^3, 2), big.mark=",",format="f", drop0trailing = TRUE))
     })
 }
+##' @export
 as.character.HRNumber <- function(s0){
     s0 <- as.numeric(s0)
     sapply(s0,function(s){
         (formatC(round(s,0), big.mark=",",format="f", drop0trailing = TRUE))
     })
 }
+##' @export
 print.HRBytes <- function(s){
     print(as.character.HRBytes(s))
 }
+##' @export
 print.HRNumber <- function(s){
     print(as.character.HRNumber(s))
 }
+##' @export
 as.data.frame.HRBytes <- as.data.frame.vector
+##' @export
 format.HRBytes <- function(x,...){
     l <- as.character(x)
     format(l,...)
@@ -98,18 +106,21 @@ format.HRNumber <- function(x,...){
     format(l,...)
 }
 
-
+##' @export
 HRBytes <- function(s){
     s <- isn(s)
     class(s) <- "HRBytes"
     s
 }
+##' @export
 HRNumber <- function(s){
     s <- isn(s)
     class(s) <- "HRNumber"
     s
 }
 
+
+##' @export
 scStages <- function(appid,remotenode,port=4040,verbose=FALSE){
     if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
     if(missing(appid)) appid <- getAppId(remotenode,port)
@@ -134,6 +145,7 @@ scStages <- function(appid,remotenode,port=4040,verbose=FALSE){
 }
 
 
+##' @export
 makeProgressString <- function(appid,remotenode, port=4040){
     if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
     if(missing(appid)) appid <- getAppId(remotenode,port)
@@ -152,6 +164,7 @@ makeProgressString <- function(appid,remotenode, port=4040){
     c(s1,s2,j)
 }
 
+##' @export
 monitorCurrentSparkApplication <- function(cl,port=4040, mon.sec=5){
     ssh <- sprintf("ssh hadoop@%s",cl$MasterPublicDnsName)
     appid <- getAppId(ssh,port)
