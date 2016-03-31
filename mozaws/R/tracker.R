@@ -6,7 +6,7 @@ isn <- function(s,r=NA) if(length(s)==0 || is.null(s)) r else s
 ## ipython creates a new application.
 
 #options(mozremote = (ssh <- sprintf("ssh hadoop@%s",cl$MasterPublicDnsName)))
-
+## if running in remote server, replace ssh = 'sh -c'
 getAppId <- function(remotenode,port){
         x <- scApplicationList(remotenode,port)
         x[!x$done,][,id[1]]
@@ -16,9 +16,10 @@ getAppId <- function(remotenode,port){
 scApplicationList <- function(remotenode,port=4040,verbose=FALSE){
     ## 18080 for history
     if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
-    l <- paste(system(x<-infuse("{{SSH}} 'curl -L -H \"Accept: application/json\" http://localhost:{{port}}/api/v1/applications 2>/dev/null' 2>/dev/null",port=port,SSH=remotenode), intern=TRUE),collapse="\n")
-    if(l=="") stop("No data? Try using port 18080. It might be that you do not have a notebook/ipython session running. Start one and then the port 4040 might work")
+    x<-infuse("{{SSH}} 'curl -L -H \"Accept: application/json\" http://localhost:{{port}}/api/v1/applications 2>/dev/null' 2>/dev/null",port=port,SSH=remotenode)
     if(verbose) print(x)
+    l <- paste(system(x, intern=TRUE),collapse="\n")
+    if(l=="") stop("No data? Try using port 18080. It might be that you do not have a notebook/ipython session running. Start one and then the port 4040 might work")
     tryCatch(a <- fromJSON(l),error=function(e){
         cat(sprintf("mozaws: There was an error running the command to get applications. Command is \n%s\nOutput is\n", x,l))
         e
@@ -44,6 +45,7 @@ scJobsForApplication <- function(appid,remotenode,port=4040,verbose=FALSE){
         cat(sprintf("mozaws: There was an error running the command to get jobs. Command is \n%s\nOutput is\n", x,l))
         e
     })
+    if(length(a)==0) return(data.table())
     rbindlist(Map(function(s){
         data.table(id=s$jobId,
                    name=s$name,
