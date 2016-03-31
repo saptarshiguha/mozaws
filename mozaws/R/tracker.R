@@ -149,7 +149,9 @@ scStages <- function(appid,remotenode,port=4040,verbose=FALSE){
 makeProgressString <- function(appid,remotenode, port=4040){
     if(missing(remotenode)) remotenode <- tail(options("mozremote"),1)
     if(missing(appid)) appid <- getAppId(remotenode,port)
-    js <- head(scJobsForApplication(appid,remotenode, port)[status=="RUNNING",],1)
+    X <- scJobsForApplication(appid,remotenode, port)
+    if(nrow(X)==0) return(NULL)
+    js <- head(X[status=="RUNNING",],1)
     if(nrow(js)==0) return(NULL)
     s1 <- "App:{{app}} Job[id:{{id}}, name:'{{name}}'] started at: {{start}}, duration: {{dura}} min"
     s2 <- "Tasks(c,f/all,%): {{tdone}},{{tfail}}/{{tall}},{{tpct}} Stages(c,f/all,%): {{sdone}},{{sfail}}/{{sall}},{{spct}}"
