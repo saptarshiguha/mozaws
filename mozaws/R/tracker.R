@@ -150,7 +150,7 @@ makeProgressString <- function(appid,remotenode, port=4040){
     (sprintf("%s%s",u,j))
 }
 
-monitorCurrentApplication <- function(cl,port=4040, mon.sec=5){
+monitorCurrentSparkApplication <- function(cl,port=4040, mon.sec=5){
     ssh <- sprintf("ssh hadoop@%s",cl$MasterPublicDnsName)
     appid <- getAppId(ssh,port)
     nr <- 0
