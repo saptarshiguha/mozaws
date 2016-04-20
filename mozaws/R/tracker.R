@@ -157,6 +157,7 @@ scStages <- function(appid,remotenode,port=4040,verbose=FALSE){
     })
     rbindlist(Map(function(s){
         data.table(stageId=s$stageId,
+                   name = s$name,
                    status=s$status,
                    tActive=s$numActiveTasks,
                    tCompleted=isn(s$numCompleteTasks),
