@@ -40,28 +40,28 @@ sudo yum -y install git emacs tbb tbb-devel jq jq-devel tmux libffi-devel htop l
 sudo yum -y install epel-release readline-devel libcurl  libcurl-devel libxml2 libxml2-devel libpng-devel cairo-devel
 sudo ldconfig
 
-## Prepare Hadoop Related variables
-cd $MYHOME
-echo 'export R_LIBS=/usr/local/rlibs' | sudo tee -a /etc/bashrc
-echo 'export HADOOP=/home/hadoop' | sudo tee -a /etc/bashrc
-echo 'export HADOOP_HOME=/home/hadoop'  | sudo tee -a /etc/bashrc
-echo 'export HADOOP_CONF_DIR=/home/hadoop/conf/' | sudo tee -a /etc/bashrc
-echo 'export RHIPE_HADOOP_TMP_FOLDER=/tmp/' | sudo tee -a /etc/bashrc
-echo 'export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig' | sudo tee -a /etc/bashrc
-echo "export HADOOP_LIBS=`hadoop classpath | tr -d '*'`" | sudo tee -a /etc/bashrc
+# ## Prepare Hadoop Related variables
+# cd $MYHOME
+# echo 'export R_LIBS=/usr/local/rlibs' | sudo tee -a /etc/bashrc
+# echo 'export HADOOP=/home/hadoop' | sudo tee -a /etc/bashrc
+# echo 'export HADOOP_HOME=/home/hadoop'  | sudo tee -a /etc/bashrc
+# echo 'export HADOOP_CONF_DIR=/home/hadoop/conf/' | sudo tee -a /etc/bashrc
+# echo 'export RHIPE_HADOOP_TMP_FOLDER=/tmp/' | sudo tee -a /etc/bashrc
+# echo 'export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig' | sudo tee -a /etc/bashrc
+# echo "export HADOOP_LIBS=`hadoop classpath | tr -d '*'`" | sudo tee -a /etc/bashrc
 
 
-echo "Compiling Protobuf"
+# echo "Compiling Protobuf"
 
-export PROTO_BUF_VERSION=2.5.0
-wget https://protobuf.googlecode.com/files/protobuf-$PROTO_BUF_VERSION.tar.bz2
-tar jxvf protobuf-$PROTO_BUF_VERSION.tar.bz2
-cd protobuf-$PROTO_BUF_VERSION
-./configure && make -j4
-sudo make install
-sudo echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf
-sudo ldconfig
-cd ..
+# export PROTO_BUF_VERSION=2.5.0
+# wget https://protobuf.googlecode.com/files/protobuf-$PROTO_BUF_VERSION.tar.bz2
+# tar jxvf protobuf-$PROTO_BUF_VERSION.tar.bz2
+# cd protobuf-$PROTO_BUF_VERSION
+# ./configure && make -j4
+# sudo make install
+# sudo echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf
+# sudo ldconfig
+# cd ..
 
 
 ## Setup environment variables

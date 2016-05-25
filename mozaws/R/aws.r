@@ -146,7 +146,7 @@ makeNiceBS <- function(s, ...){
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Hadoop","Hive","Spark"),opts=NULL){
+                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Spark","Hive"),opts=NULL){
     awsOpts <- aws.options()
     for(n in names(opts)){
         awsOpts[[n]] <- opts[[n]]
@@ -390,7 +390,7 @@ aws.step.run <- function(cl,script,name=NULL,args=NULL,wait=TRUE){
     temp <- infuse("{{awscli}} emr add-steps --cluster-id {{cid}} --steps {{scripturl}}",cid=cl$Id,awscli=awsOpts$awscli, scripturl=scripturl)
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
-    message(sprintf("Running step with Id: %s", x))
+    message(sprintf("Running step with Id (see logs at /mnt/var/log/hadoop/steps/%s) : %s", x,x))
     if(wait) aws.step.wait(cl,x) else list(cl, x)
 }
 

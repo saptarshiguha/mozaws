@@ -1,15 +1,18 @@
 #!/bin/sh
-TFILE="/tmp/$(basename $1).$$"
+TFILE="/tmp/$(basename $2).$$"
+echo "Downloading " $2
+echo $TFILE
 
-if [[ $1 == s3://*  ]]; then
+
+if [[ $2 == s3://*  ]]; then
     echo "S3 file"
     aws s3 cp $1 $TFILE
 else
     echo "regular file"
-    curl  $1 -o  $TFILE
+    curl  $2 -o  $TFILE
 fi
 
-echo "Downloaded" $1 "to" $TFILE
+echo "Downloaded" $2 "to" $TFILE
 chmod +x $TFILE
 exec $TFILE $@
 
