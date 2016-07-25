@@ -7,8 +7,7 @@
 aws.clus.create(name = NULL, workers = NULL, master = NULL,
   hadoopops = NULL, timeout = NULL, verbose = FALSE, emrfs = FALSE,
   steps = NULL, bsactions = NULL, wait = TRUE, spark = FALSE,
-  enableDebug = FALSE, applications = c("Hadoop", "Hive", "Spark"),
-  opts = NULL)
+  enableDebug = FALSE, applications = c("Spark", "Hive"), opts = NULL)
 }
 \arguments{
 \item{name}{is the name of the cluster, if not provided one will be created for you}

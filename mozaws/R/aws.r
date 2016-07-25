@@ -17,12 +17,25 @@ secondsToString <- function(secs,rnd=2){
   else  sprintf("%s years",Round(secs/(86400*365),rnd))
 }
 
-
+##' Lists Clusters
+##' @param active if TRUE reports only active clusters
+##' @return a JSON blob of active clusters
+##' @export
 aws.clus.list <- function(active=TRUE){
     awsOpts <- aws.options()
     checkIfStarted()
-    temp <- infuse("{{awscli}} emr list-clisters {{active}}",awscli=awsOpts$awscli, active=if (active) "--active")
-    presult( system(temp,intern=TRUE))$Clusters
+    temp <- infuse("{{awscli}} emr list-clusters {{active}}",awscli=awsOpts$awscli, active=if (active) "--active")
+    
+    u <- presult( system(temp,intern=TRUE))$Clusters
+    isn <- function(s,r=NA) if (is.null(s) ||length(s)==0) r else s
+    
+    f <- rbindlist(lapply(u, function(k){
+        data.table(id=isn(k$Id),name = isn(k$Name),nhrs = isn(k$NormalizedInstanceHours),
+                   started = as.POSIXct(isn(k$Status$Timeline$CreationDateTime,NA),origin="1970-01-01"),
+                   state = isn(k$Status$State),
+                   stageChangeMessage = isn(k$Status$StateChangeReason$Message))
+    }))[order(-started),]
+    list(dt = f, original = u)
 }
 
 #' Initialize the AWS System

@@ -6,7 +6,7 @@ echo $TFILE
 
 if [[ $2 == s3://*  ]]; then
     echo "S3 file"
-    aws s3 cp $1 $TFILE
+    aws s3 cp $2 $TFILE
 else
     echo "regular file"
     curl  $2 -o  $TFILE
