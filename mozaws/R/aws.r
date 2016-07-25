@@ -35,6 +35,7 @@ aws.clus.list <- function(active=TRUE){
                    state = isn(k$Status$State),
                    stageChangeMessage = isn(k$Status$StateChangeReason$Message))
     }))[order(-started),]
+    f$elapsed <-  Sys.time() - f$started
     list(dt = f, original = u)
 }
 
