@@ -19,12 +19,24 @@ secondsToString <- function(secs,rnd=2){
 
 ##' Lists Clusters
 ##' @param active if TRUE reports only active clusters
+##' @param before a date string (that can be converted using as.POSIXct) used for --created-before
+##' @param since a date string (that can be converted using as.POSIXct) used for --created-since
 ##' @return a JSON blob of active clusters
 ##' @export
-aws.clus.list <- function(active=TRUE){
+aws.clus.list <- function(active=TRUE,since=NULL,before=NULL){
+    mkTime <- function(s,txt){
+        if(!is.null(s)){
+            s <- as.POSIXct(s,origin="1970-01-01")
+            sprintf("--%s %s",txt,strftime(s, format="%Y-%m-%dT%H:%M:%S"))
+        } else ""
+    }
     awsOpts <- aws.options()
     checkIfStarted()
-    temp <- infuse("{{awscli}} emr list-clusters {{active}}",awscli=awsOpts$awscli, active=if (active) "--active")
+    since <- mkTime(since,"created-after")
+    before <- mkTime(before,"created-before")
+    temp <- infuse("{{awscli}} emr list-clusters {{active}} {{createdsince}} {{createdbefore}}",awscli=awsOpts$awscli,
+                   createdsince = since, createdbefore=before,
+                   active=if(active) "--active" else "")
     
     u <- presult( system(temp,intern=TRUE))$Clusters
     isn <- function(s,r=NA) if (is.null(s) ||length(s)==0) r else s
