@@ -202,6 +202,16 @@ makeProgressString <- function(appid,remotenode, port=4040){
 ##' @param mon.sec is the update frequency
 ##' @export
 monitorCurrentSparkApplication <- function(cl,port=4040, mon.sec=5){
+    if( "package:colorout" %in% search()) {
+        tryCatch(noColorOut(), error=function(e) NULL)
+    }
+    on.exit({
+        ## technically i should get the status and toggle of or on accordingly.
+        if( "package:colorout" %in% search()) {
+                tryCatch(ColorOut(), error=function(e) NULL)
+        }
+    })
+                
     ssh <- sprintf("ssh hadoop@%s",cl$MasterPublicDnsName)
     appid <- getAppId(ssh,port)
     nr <- 0
@@ -230,4 +240,5 @@ monitorCurrentSparkApplication <- function(cl,port=4040, mon.sec=5){
         flush.console()
         Sys.sleep(max(1, as.integer(mon.sec)))
     }
+    
 }
