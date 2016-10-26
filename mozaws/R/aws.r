@@ -201,7 +201,8 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     }else customscript=""
     otherbs <- if(!is.null(bsactions)) makeNiceBS(bsactions)
     if(spark==TRUE){
-        sparkb <- "Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh'"
+        sparkb <- infuse("Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}']",
+                         pubkey = awsOpts$localpubkey,timeout=awsOpts$timeout)
     }else sparkb <- ""
     if(length(applications)>0){
         applications = sprintf("--applications %s",paste("Name=", applications,sep="",collapse= " "))
@@ -209,8 +210,6 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
     sparkmoz <- ""
     if(enableDebug) dodebug <- "--enable-debugging" else dodebug <- ""
-    RhipeConfigure <- infuse("Path='s3://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}']",s3buk=awsOpts$s3bucket,
-                             pubkey=awsOpts$localpubkey,timeout=timeout)
     
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
     xtags <- local({
@@ -227,8 +226,8 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     args <- list(awscli = awsOpts$awscli, releaselabel=awsOpts$releaselabel,loguri=awsOpts$loguri,otherbs=otherbs,ec2bits=ec2bits
                 ,name=name,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb
                 ,workertype=workers[[2]],hadoopargs=hadoopargs,tags=xtags,configfile=configfile,applications=applications
-                ,timeout=awsOpts$timeout, pubkey=awsOpts$localpubkey,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket, configfile=configfile)
-    template = "{{awscli}} emr create-cluster {{configfile}} {{applications}} --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --release-label '{{releaselabel}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions  Path='s3://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}'] {{spark}} {{otherbs}} --steps Type=CUSTOM_JAR,Name='Perms',ActionOnFailure=CONTINUE,Jar=s3://elasticmapreduce/libs/script-runner/script-runner.jar,Args=['s3://{{s3buk}}/final.step.sh'] {{customscript}}"
+                ,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket, configfile=configfile)
+    template = "{{awscli}} emr create-cluster {{configfile}} {{applications}} --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --release-label '{{releaselabel}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions  {{spark}} {{otherbs}}  {{customscript}}"
 
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
