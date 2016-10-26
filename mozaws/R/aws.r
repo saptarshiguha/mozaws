@@ -209,7 +209,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
     sparkmoz <- ""
     if(enableDebug) dodebug <- "--enable-debugging" else dodebug <- ""
-    RhipeConfigure <- infuse("Path='s3n://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}']",s3buk=awsOpts$s3bucket,
+    RhipeConfigure <- infuse("Path='s3://{{s3buk}}/kickstartrhipe.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}']",s3buk=awsOpts$s3bucket,
                              pubkey=awsOpts$localpubkey,timeout=timeout)
     
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
