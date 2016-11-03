@@ -464,7 +464,7 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(aws.options()
         spotq=""
     }else{
         if(is.null (spotPrice)){
-            p <- quantile(aws.spot.price(type=type, hrsInPast=0.30)$SpotPrice,0.8)
+            p <- min(quantile(aws.spot.price(type=type, hrsInPast=0.30)$SpotPrice,0.8),0.84)
             message(sprintf("Using a spot price of %s", p))
         }else p <- spotPrice
         p <- as.character(round(p,3))
