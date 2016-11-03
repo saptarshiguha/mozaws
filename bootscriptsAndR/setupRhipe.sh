@@ -8,11 +8,11 @@ sudo yum -y install protobuf-2.5.0-10.el7.centos.x86_64.rpm protobuf-compiler-2.
 
 ## Set Hadoop Config VAriables that RHIPE requires
 echo ""  >> /home/hadoop/.bash_profile
-echo "export HADOOP_LIBS=/usr/lib/hadoop/client:/usr/lib/hadoop/lib:/usr/lib/hadoop:/usr/lib/hadoop-hdfs/:/usr/lib/hadoop-yarn/:/usr/lib/hadoop-mapreduce/:/usr/share/aws/emr/emrfs/conf:/usr/share/aws/emr/emrfs/lib/:/usr/share/aws/emr/emrfs/auxlib/" >> /home/hadoop/.bash_profile
+echo "export HADOOP_LIBS=/usr/lib/hadoop/client:/usr/lib/hadoop-lzo/lib:/usr/lib/hadoop/lib:/usr/lib/hadoop:/usr/lib/hadoop-hdfs/:/usr/lib/hadoop-yarn/:/usr/lib/hadoop-mapreduce/:/usr/share/aws/emr/emrfs/conf:/usr/share/aws/emr/emrfs/lib/:/usr/share/aws/emr/emrfs/auxlib/:/usr/share/aws/aws-java-sdk/" >> /home/hadoop/.bash_profile
 echo "export HADOOP_CONF_DIR=/etc/hadoop/conf" >> /home/hadoop/.bash_profile
+echo  "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/lib/hadoop-lzo/lib/native/" >> /home/hadoop/.bash_profile
 
-
-aws s3 cp s3://mozilla-metrics/user/sguha/tmp/R.tar.gz /tmp/
+aws s3 cp s3://mozilla-metrics/user/share/R.tar.gz /tmp/
 hadoop dfs -put  /tmp/R.tar.gz /
 
 cd /home/hadoop/
