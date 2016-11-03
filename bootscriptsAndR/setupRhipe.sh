@@ -16,6 +16,7 @@ aws s3 cp s3://mozilla-metrics/user/sguha/tmp/R.tar.gz /tmp/
 hadoop dfs -put  /tmp/R.tar.gz /
 
 cd /home/hadoop/
+rm -rf /home/hadoop/rhipe.r
 wget https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/rhipe.r
 
 echo "echo \"Remember to call source('~/rhipe.r') if you want RHIPE\"" >> ~/.bash_profile
