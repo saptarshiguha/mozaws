@@ -39,7 +39,7 @@ rhoptions(runner            = sprintf("./%s/RhipeMapReduce --silent --vanilla",R
 
 EOF
 
-echo "echo 'Remember to call source(\"~/rhipe.r\") if you want RHIPE" >> ~/.bash_profile
+echo "echo \"Remember to call source('~/rhipe.r') if you want RHIPE\"" >> ~/.bash_profile
 
 ## Download the R packages and copy them into the folder
 ## Note, hat RHIPE was compiled by
