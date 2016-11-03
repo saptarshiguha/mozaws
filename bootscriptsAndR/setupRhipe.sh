@@ -15,7 +15,9 @@ echo "export HADOOP_CONF_DIR=/etc/hadoop/conf" >> /home/hadoop/.bash_profile
 aws s3 cp s3://mozilla-metrics/user/sguha/tmp/R.tar.gz /tmp/
 hadoop dfs -put  /tmp/R.tar.gz /
 
-wget 
+cd /home/hadoop/
+wget https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/rhipe.r
+
 echo "echo \"Remember to call source('~/rhipe.r') if you want RHIPE\"" >> ~/.bash_profile
 
 ## Download the R packages and copy them into the folder
