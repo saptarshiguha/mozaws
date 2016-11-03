@@ -12,7 +12,7 @@ echo "export HADOOP_LIBS=/usr/lib/hadoop/client:/usr/lib/hadoop/lib:/usr/lib/had
 echo "export HADOOP_CONF_DIR=/etc/hadoop/conf" >> /home/hadoop/.bash_profile
 
 
-aws s3 s3://mozilla-metrics/user/sguha/tmp/R.tar.gz /tmp/
+aws s3 cp s3://mozilla-metrics/user/sguha/tmp/R.tar.gz /tmp/
 hadoop dfs -put  /tmp/R.tar.gz /
 
 cat << EOF > /home/hadoop/rhipe.r
@@ -36,7 +36,6 @@ rhoptions(runner            = sprintf("./%s/RhipeMapReduce --silent --vanilla",R
           mropts            = m,
           job.status.overprint =TRUE,
           write.job.info    =TRUE)
-
 EOF
 
 echo "echo \"Remember to call source('~/rhipe.r') if you want RHIPE\"" >> ~/.bash_profile
@@ -46,9 +45,9 @@ echo "echo \"Remember to call source('~/rhipe.r') if you want RHIPE\"" >> ~/.bas
 ## cloning RHIPE (As of commit: d3eed56735ece58a7a39e44cd48cfd3522212766)
 ## and compiling for hadoop-2 (not CDH etc)
 ## The R library tarball was built as: tar cvf Rlibraries_c34xlarge.tar /home/hadoop/R_libs
-## cd /home/hadoop/
-## aws s3 cp s3://mozilla-metrics/user/sguha/tmp/Rlibraries_c34xlarge.tar /home/hadoop/
-## tar xvf /home/hadoop/Rlibraries_c34xlarge.tar
+cd /home/hadoop/
+aws s3 cp s3://mozilla-metrics/user/sguha/tmp/Rlibraries_c34xlarge.tar /home/hadoop/
+tar xvf /home/hadoop/Rlibraries_c34xlarge.tar
 
 
 
