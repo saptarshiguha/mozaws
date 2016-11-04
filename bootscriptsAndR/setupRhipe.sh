@@ -12,7 +12,7 @@ echo "export HADOOP_LIBS=/usr/lib/hadoop/client:/usr/lib/hadoop-lzo/lib:/usr/lib
 echo "export HADOOP_CONF_DIR=/etc/hadoop/conf" >> /home/hadoop/.bash_profile
 echo  "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/usr/lib/hadoop-lzo/lib/native/" >> /home/hadoop/.bash_profile
 
-aws s3 cp s3://mozilla-metrics/user/share/R.tar.gz /tmp/
+aws s3 cp s3://mozilla-metrics/share/R.tar.gz /tmp/
 hadoop dfs -put  /tmp/R.tar.gz /
 
 cd /home/hadoop/
@@ -27,8 +27,8 @@ echo "echo \"Remember to call source('~/rhipe.r') if you want RHIPE\"" >> ~/.bas
 ## and compiling for hadoop-2 (not CDH etc)
 ## The R library tarball was built as: tar cvf Rlibraries_c34xlarge.tar /home/hadoop/R_libs
 cd /home/hadoop/
-aws s3 cp s3://mozilla-metrics/user/sguha/tmp/Rlibraries_c34xlarge.tar /home/hadoop/
-tar xvf /home/hadoop/Rlibraries_c34xlarge.tar
+aws s3 cp s3://mozilla-metrics/share/Rlibraries_c34xlarge.tar /home/hadoop/
+tar xvf /home/hadoop/Rlibraries_c34xlarge.tar --strip-components=2
 
 
 
