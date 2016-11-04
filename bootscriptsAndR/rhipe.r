@@ -18,3 +18,7 @@ rhoptions(runner            = sprintf("./%s/RhipeMapReduce --silent --vanilla",R
           mropts            = m,
           job.status.overprint =TRUE,
           write.job.info    =TRUE)
+
+library(data.table)
+library(colorout)
+options(width=200)
