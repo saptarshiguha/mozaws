@@ -31,7 +31,7 @@ aws s3 cp s3://mozilla-metrics/share/Rlibraries_c34xlarge.tar /home/hadoop/
 tar xvf /home/hadoop/Rlibraries_c34xlarge.tar --strip-components=2
 
 
-
+mkdir -p ~/r
 yum -y install inotify-tools
 cd /hom/hadoop
 wget https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/monitor.sh
