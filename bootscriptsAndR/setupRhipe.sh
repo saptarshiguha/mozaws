@@ -32,5 +32,8 @@ tar xvf /home/hadoop/Rlibraries_c34xlarge.tar --strip-components=2
 
 
 
+yum -y install inotify-tools
+cd /hom/hadoop
+wget https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/monitor.sh
 
 
