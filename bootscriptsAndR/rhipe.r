@@ -22,3 +22,4 @@ rhoptions(runner            = sprintf("./%s/RhipeMapReduce --silent --vanilla",R
 library(data.table)
 library(colorout)
 options(width=200)
+setwd("~/r")
