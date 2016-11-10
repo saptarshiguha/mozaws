@@ -489,7 +489,6 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(aws.options()
         name= if(is.null(name)) sprintf("Spot %s", name) else name
     }
     a <- c("CORE","TASK")
-    groupType <- a[ charmatch(toupper(gtype),a)]
     temp=infuse("{{awscli}} emr add-instance-groups --cluster-id  {{clid}} --instance-groups InstanceCount={{n}},{{spotq}}InstanceGroupType={{gtype}},InstanceType={{mtype}},Name='{{foo}}'"
              , awscli=awsOpts$awscli,clid=cl$Id,n=as.integer(n),spotq=spotq, gtype = "TASK", mtype=as.character(type),foo=name)
     l <- presult(system(temp,intern=TRUE))
