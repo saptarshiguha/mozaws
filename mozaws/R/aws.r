@@ -152,6 +152,7 @@ makeNiceBS <- function(s, ...){
 #' @param applications one or more of  Hadoop, Spark, Hue, Hive, Pig, HBase, Ganglia and Impala (default Hadoop and Spark)
 #' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries. If equal to "mozilla" will install Mozilla's libraries.
 #' @param enableDebug TRUE or FALSE(FALSE), turns on hadoop debugging
+#' @param spotForCore if NULL(default) uses on demand nodes for core. Otherwise the value is the bid price. If set to NA, then a bid price is chosen for you.
 #' @param opts list of options to modify string. Mysterious
 #' @details The arguments \code{hadoopops, timeout, customscript} can
 #' also be set in options. If \code{wait} is FALSE, the function will
@@ -172,7 +173,9 @@ makeNiceBS <- function(s, ...){
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Spark","Hive"),opts=NULL){
+                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Spark","Hive")
+                           ,spotForCore=NULL
+                           ,opts=NULL){
     awsOpts <- aws.options()
     for(n in names(opts)){
         awsOpts[[n]] <- opts[[n]]
@@ -223,11 +226,25 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
         infuse("--tags user='{{uusser}}' crtr='rmozaws-1' {{rest}}",uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI")),rest=rest)
     })
     if(!is.na(awsOpts$configfile)) configfile <- sprintf("--configurations %s" , awsOpts$configfile) else configfile <- ""
+    
+    if(is.null(spotForCore)){
+        ## All core nodes are on demand
+        core.txt <- infuse("InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}",numworkers = workers[[1]], workertype = workers[[2]])
+    }else{
+        spotForCore <- unlist(spotForCore)[[1]]
+        if(is.na(spotForCore)){
+                spotBid <-  min(quantile(aws.spot.price(type = workers[[2]], hrsInPast = 0.3)$SpotPrice, 0.8), 0.84)
+            }else{
+                spotBid <- as.numeric(spotForCore)
+            }
+        message(sprintf("Setting CORE nodes to spot with a bid price of %s",spotBid))
+        core.txt <- infuse("InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}},BidPrice={{bp}}", numworkers=  workers[[1]], workertype = workers[[2]] , bp = as.character(round(spotBid, 3)))
+    }
     args <- list(awscli = awsOpts$awscli, releaselabel=awsOpts$releaselabel,loguri=awsOpts$loguri,otherbs=otherbs,ec2bits=ec2bits
                 ,name=name,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb
                 ,workertype=workers[[2]],hadoopargs=hadoopargs,tags=xtags,configfile=configfile,applications=applications
-                ,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket, configfile=configfile)
-    template = "{{awscli}} emr create-cluster {{configfile}} {{applications}} --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --release-label '{{releaselabel}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}}  --bootstrap-actions  {{spark}} {{otherbs}}  {{customscript}}"
+                ,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket, configfile=configfile,coretxt=core.txt)
+    template = "{{awscli}} emr create-cluster {{configfile}} {{applications}} --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --release-label '{{releaselabel}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  {{coretxt}}  --bootstrap-actions  {{spark}} {{otherbs}}  {{customscript}}"
 
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))
@@ -471,8 +488,10 @@ aws.modify.groups <- function(cl,n,groupid=NULL, type=as.character(aws.options()
         spotq <- sprintf("BidPrice=%s,", p)
         name= if(is.null(name)) sprintf("Spot %s", name) else name
     }
-    temp=infuse("{{awscli}} emr add-instance-groups --cluster-id  {{clid}} --instance-groups InstanceCount={{n}},{{spotq}}InstanceGroupType=task,InstanceType={{mtype}},Name='{{foo}}'"
-             , awscli=awsOpts$awscli,clid=cl$Id,n=as.integer(n),spotq=spotq, mtype=as.character(type),foo=name)
+    a <- c("CORE","TASK")
+    groupType <- a[ charmatch(toupper(gtype),a)]
+    temp=infuse("{{awscli}} emr add-instance-groups --cluster-id  {{clid}} --instance-groups InstanceCount={{n}},{{spotq}}InstanceGroupType={{gtype}},InstanceType={{mtype}},Name='{{foo}}'"
+             , awscli=awsOpts$awscli,clid=cl$Id,n=as.integer(n),spotq=spotq, gtype = "TASK", mtype=as.character(type),foo=name)
     l <- presult(system(temp,intern=TRUE))
     aws.clus.info(cl)
 }

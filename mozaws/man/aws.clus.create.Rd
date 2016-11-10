@@ -7,7 +7,8 @@
 aws.clus.create(name = NULL, workers = NULL, master = NULL,
   hadoopops = NULL, timeout = NULL, verbose = FALSE, emrfs = FALSE,
   steps = NULL, bsactions = NULL, wait = TRUE, spark = FALSE,
-  enableDebug = FALSE, applications = c("Spark", "Hive"), opts = NULL)
+  enableDebug = FALSE, applications = c("Spark", "Hive"),
+  spotForCore = NULL, opts = NULL)
 }
 \arguments{
 \item{name}{is the name of the cluster, if not provided one will be created for you}
@@ -35,6 +36,8 @@ aws.clus.create(name = NULL, workers = NULL, master = NULL,
 \item{enableDebug}{TRUE or FALSE(FALSE), turns on hadoop debugging}
 
 \item{applications}{one or more of  Hadoop, Spark, Hue, Hive, Pig, HBase, Ganglia and Impala (default Hadoop and Spark)}
+
+\item{spotForCore}{if NULL(default) uses on demand nodes for core. Otherwise the value is the bid price. If set to NA, then a bid price is chosen for you.}
 
 \item{opts}{list of options to modify string. Mysterious}
 
