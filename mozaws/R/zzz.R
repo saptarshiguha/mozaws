@@ -10,6 +10,7 @@ if(!packageVersion("infuser")>="0.2") stop("Higher Version Required")
                 awscli     = "aws",
                 releaselabel = "emr-4.3.0" ,
                 timeout    = "2880",
+                refreshBeforePrint = TRUE,
             loguri     = NA,
             numworkers = 3,
             numcreated = 0,

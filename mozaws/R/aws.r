@@ -82,8 +82,14 @@ aws.init <- function(ec2key=NULL,localpubkey=NULL,optsmore=NULL){
         message(sprintf("Using provided key: %s", opts$ec2key))
     }
     if(!is.null(localpubkey)){
+        oldl <- localpubkey
         if(file.exists(localpubkey)){ localpubkey <- readLines(localpubkey) } else message("localpublickey is not a file, assuming it is a public key")
         opts$localpubkey = localpubkey
+        opts$pathtoprivkey <- local({
+            f <- path.expand(normalizePath(oldl))
+            f1 <- head(strsplit(basename(f),".",fixed=TRUE)[[1]],-1)
+            sprintf("%s%s%s",dirname(f),.Platform$file.sep, paste(f1,collapse=""))
+        })
     }
     if(!is.null(optsmore)) for(x in names(optsmore)) opts[[x]] <- optsmore[[x]]
     opts$init <- TRUE
@@ -265,6 +271,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     gg <- options("mozremote")[[1]]
     if(is.null(gg)) gg <-  X else gg <- append(gg,X)
     options(mozremote = gg)
+    if(identical(aws.options()$refreshBeforePrint,TRUE)) g$refreshBeforePrint <- TRUE
     g
 }
 
@@ -337,6 +344,10 @@ isn <- function(s,j=NA) if(is.null(s) || length(s)==0) j else s
 
 #' @export
 print.awsCluster <- function(r){
+    if(identical(TRUE,r$refreshBeforePrint) || identical(TRUE,aws.options()$refreshBeforePrint)){
+        cat("refreshing cluster information ... \n")
+        r <- aws.clus.info(r)
+    }
     state <- isn(r$Status$State,NA)
     name <- isn(r$Name)
     started <- as.POSIXct(isn(r$Status$Timeline$CreationDateTime),origin="1970-01-01")
@@ -373,10 +384,8 @@ Reason      : {{changereason}}
 Started At  : {{started}}
 Message     : {{currently}}
 IP          : {{dns}}
-SSH         : ssh hadoop@{{dns}} (assuming did aws.init(localpub=your-pub-key) else ssh -i path-to-aws-pem-file hadoop@{{dns}}
+SSH         : ssh hadoop@{{dns}} (assuming did aws.init(localpub=your-pub-key) \n\t else ssh -i {{pathtopriv}}  hadoop@{{dns}}
 SOCKS       : ssh -ND 8157 hadoop@{{dns}} (and use FoxyProxy for Firefox or SwitchySharp for Chrome)
-Rstudio     : http://{{dns}} (user/pass is metrics/metrics)
-Shiny       : http://{{dns}}:3838
 JobTracker  : http://{{dns}}:9026 (needs a socks)
 Spark UI    : http://localhost:8888 but first run ssh -L 8888:localhost:8888 hadoop@{{dns}}
 Master Type : {{master}} (and is running: {{isrunning}})
@@ -388,7 +397,7 @@ Core Nodes  : {{nworker}} of  {{ workerstype }}
 ,list(clid  =r$Id, dd=secondsToString(as.numeric(Sys.time() - r$timeupdated,"secs"),2),name=name
 , state     =state, started=started, currently=currently,changereason = isn(r$Status$StateChangeReason$Message,"No Reason")
 , dns       =dns, master=master['type'],isrunning=as.logical(master['running'])
-, nworker   =workers.core$'running', workerstype=workers.core$type,gtext=gtext
+, nworker   =workers.core$'running', workerstype=workers.core$type,gtext=gtext,pathtopriv=aws.options()$pathtoprivkey
 ,awsconsole =awsconsole))
     cat(temp)
 }
