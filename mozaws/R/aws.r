@@ -344,7 +344,7 @@ isn <- function(s,j=NA) if(is.null(s) || length(s)==0) j else s
 
 #' @export
 print.awsCluster <- function(r){
-    if(identical(TRUE,r$refreshBeforePrint) && identical(TRUE,aws.options()$refreshBeforePrint)){
+    if(identical(TRUE,r$refreshBeforePrint) || identical(TRUE,aws.options()$refreshBeforePrint)){
         cat("refreshing cluster information ... \n")
         r <- aws.clus.info(r)
     }
