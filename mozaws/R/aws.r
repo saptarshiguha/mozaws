@@ -271,7 +271,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
     gg <- options("mozremote")[[1]]
     if(is.null(gg)) gg <-  X else gg <- append(gg,X)
     options(mozremote = gg)
-    if(identical(aws.options()$refreshBeforePrint,TRUE)) g$refreshBeforePrint <- TRUE
+    g$refreshBeforePrint <- aws.options()$refreshBeforePrint
     g
 }
 
@@ -336,6 +336,7 @@ aws.clus.info <- function(cl){
     r$timeupdated <- Sys.time()
     r1 <- presult(system(infuse("{{awscli}} emr list-steps --cluster-id {{id}}",awscli=awsOpts$awscli,id=acid),intern=TRUE))$Steps
     r$steps <- r1
+    r$refreshBeforePrint <- cl$refreshBeforePrint
     class(r) <- "awsCluster"
     r
 }
