@@ -345,7 +345,7 @@ isn <- function(s,j=NA) if(is.null(s) || length(s)==0) j else s
 
 #' @export
 print.awsCluster <- function(r){
-    if(identical(TRUE,r$refreshBeforePrint))
+    if(identical(TRUE,r$refreshBeforePrint)){
         cat("refreshing cluster information ... \n")
         r <- aws.clus.info(r)
     }
@@ -400,7 +400,7 @@ Core Nodes  : {{nworker}} of  {{ workerstype }}
 , dns       =dns, master=master['type'],isrunning=as.logical(master['running'])
 , nworker   =workers.core$'running', workerstype=workers.core$type,gtext=gtext,pathtopriv=aws.options()$pathtoprivkey
 ,awsconsole =awsconsole))
-    cat(temp)
+cat(temp)
 }
 
 #' Waits for a script to run
