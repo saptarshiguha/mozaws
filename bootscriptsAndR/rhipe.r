@@ -24,7 +24,7 @@ library(colorout)
 library(Hmis)
 options(width=200)
 
-rsp <- function(o,r=NA){
+rsp <- function(o,cnames=NULL,r=NA){
           ## converts key-value pairs from HAdoop MApReduce Jobs to data tables
     fixup <- function(s,r=r) if(is.null(s) || length(s)==0) r else s
     x <- o[[1]]
@@ -42,7 +42,8 @@ rsp <- function(o,r=NA){
           }else{
               data.table(do.call(rbind,lapply(o,function(s) s[[2]])))
           }
-    cbind(p1,p2)
+    x <- cbind(p1,p2)
+    if(!is.null(cnames))  setnames(x,cnames)                                           
 }
     
         
