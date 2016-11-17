@@ -21,5 +21,29 @@ rhoptions(runner            = sprintf("./%s/RhipeMapReduce --silent --vanilla",R
 
 library(data.table)
 library(colorout)
+library(Hmis)
 options(width=200)
+
+rsp <- function(o,r=NA){
+          ## converts key-value pairs from HAdoop MApReduce Jobs to data tables
+    fixup <- function(s,r=r) if(is.null(s) || length(s)==0) r else s
+    x <- o[[1]]
+    k <- x[[1]];v <- x[[2]]
+    if( is(k, "list") && length(k)>=1){
+        ## key is list with names (presumably) nd these form columns
+        m <- list()
+        for(i in 1:length(k)){
+            m[[ length(m) +1 ]] <- unlist(lapply(o,function(s){ fixup(s[[1]][[i]]) }))
+        }
+        p1 <- do.call(data.table,m)
+    }else stop("key should be a list")
+    p2 <- if(is(v,"data.table")) {
+              do.call(rbindlist,lapply(o,function(s) s[[2]]))
+          }else{
+              data.table(do.call(rbind,lapply(o,function(s) s[[2]])))
+          }
+    cbind(p1,p2)
+}
+    
+        
 setwd("~/r")
