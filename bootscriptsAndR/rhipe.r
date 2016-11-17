@@ -21,7 +21,7 @@ rhoptions(runner            = sprintf("./%s/RhipeMapReduce --silent --vanilla",R
 
 library(data.table)
 library(colorout)
-library(Hmis)
+library(Hmisc)
 options(width=200)
 
 rsp <- function(o,cnames=NULL,r=NA){
