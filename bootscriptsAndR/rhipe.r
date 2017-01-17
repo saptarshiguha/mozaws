@@ -45,8 +45,7 @@ rsp <- function(o,cnames=NULL,r=NA){
     x <- cbind(p1,p2)
     if(!is.null(cnames))  setnames(x,cnames)                                           
 }
-    
-
+   
 print.sparky <- function(l){
     x <- l[[1]]
     pN <- function(s) prettyNum(s,big.mark=",",scientific=FALSE,preserve.width="none")
@@ -61,7 +60,6 @@ Use $join() to join an asynchronous job, $output to get the output location, and
             ifo, lfo, inpRec, oupRec, oupsize),width=120),collapse="\n"))
 }
 
-
 rh <- function(src,setups){
     function(...){
         l <- list(...)
@@ -74,9 +72,9 @@ rh <- function(src,setups){
         col <- function(s) rhread(r[[2]]$lines$rhipe_output_folder)
         class(r) <- c(class(r),"sparky")
         list(result=r, join=function(mon.sec=10){
-            r <- rhstatus(r,mon.sec=mon.sec)
-            class(r) <- c(class(r),"sparky")
-            list(result=r,output=o, join=function() NULL,collect=col)
+            s <- list(rhstatus(r,mon.sec=mon.sec),r[[2]])
+            class(s) <- c(class(s),"sparky")
+            list(result=s,output=o, join=function() NULL,collect=col)
         } ,output=o, collect=col)
     }
 }
