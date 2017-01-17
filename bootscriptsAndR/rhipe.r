@@ -61,6 +61,7 @@ Use $join() to join an asynchronous job, $output to get the output location, and
             ifo, lfo, inpRec, oupRec, oupsize),width=120),collapse="\n"))
 }
 
+
 rh <- function(src,setups){
     function(...){
         l <- list(...)
@@ -74,10 +75,12 @@ rh <- function(src,setups){
         class(r) <- c(class(r),"sparky")
         list(result=r, join=function(mon.sec=10){
             r <- rhstatus(r,mon.sec=mon.sec)
+            class(r) <- c(class(r),"sparky")
             list(result=r,output=o, join=function() NULL,collect=col)
         } ,output=o, collect=col)
     }
 }
+
 
                                               
 setwd("~/r")
