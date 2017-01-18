@@ -24,6 +24,18 @@ library(colorout)
 library(Hmisc)
 options(width=200)
 
+dtbinder <-  expression(
+    pre = { .c = NULL },
+    reduce = {
+        .c <- rbind(.c,rbindlist(reduce.values))
+    },
+    post = {
+        rhcollect(reduce.key, .c)
+    })
+attr(dtbinder,"combine") <- TRUE
+
+
+
 rsp <- function(o,cnames=NULL,r=NA){
           ## converts key-value pairs from HAdoop MApReduce Jobs to data tables
     fixup <- function(s,r=r) if(is.null(s) || length(s)==0) r else s
