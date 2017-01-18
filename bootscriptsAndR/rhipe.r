@@ -69,13 +69,14 @@ rh <- function(src,setups){
         l$readback=FALSE
         r <- do.call(rhwatch,l)
         o <- r[[2]]$lines$rhipe_output_folder
-        col <- function(s) rhread(r[[2]]$lines$rhipe_output_folder)
+        col <- function() rhread(r[[2]]$lines$rhipe_output_folder)
+        take = function(n=1) rhread(r[[2]]$lines$rhipe_output_folder,max=n)
         class(r) <- c(class(r),"sparky")
         list(result=r, join=function(mon.sec=10){
             s <- list(rhstatus(r,mon.sec=mon.sec),r[[2]])
             class(s) <- c(class(s),"sparky")
             list(result=s,output=o, join=function() NULL,collect=col)
-        } ,output=o, collect=col)
+        } ,output=o, collect=col,take=take)
     }
 }
 
