@@ -87,8 +87,8 @@ rh <- function(src,setups){
         list(result=r, join=function(mon.sec=10){
             s <- list(rhstatus(r,mon.sec=mon.sec),r[[2]])
             class(s) <- c(class(s),"sparky")
-            list(result=s,output=o, join=function() NULL,collect=col)
-        } ,output=o, collect=col,take=take)
+            list(result=s,output=o, join=function() NULL,collect=col,input=src)
+        } ,output=o, input=src,collect=col,take=take)
     }
 }
 
