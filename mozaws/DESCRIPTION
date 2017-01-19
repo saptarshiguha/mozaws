@@ -12,3 +12,4 @@ Depends:
     data.table,
     devtools,
     infuser
+RoxygenNote: 5.0.1

@@ -404,6 +404,41 @@ Core Nodes  : {{nworker}} of  {{ workerstype }}
 cat(temp)
 }
 
+
+#' send a file to the cluster
+#' @param cl is the cluster object returned from \code{aws.clus.create} and friends
+#' @param src src file/path
+#' @param dst (defaults to $HOME)
+#' @details will send a file from your local end to the cluster
+#' @export
+aws.send <- function(cl, src, dst=NULL){
+    checkIfStarted()
+    srcpath <- path.expand(normalizePath(src))
+    if(is.null(dst)) dst <- "~/"
+    dns <- isn(cl$MasterPublicDnsName)
+    trn <- infuse("scp  -r -i {{pathtopriv}}  {{src}} hadoop@{{dns}}:{{dest}}", pathtopriv = aws.options()$pathtoprivkey,src=srcpath, dns=dns, dest=dst)
+    system(trn)
+}
+
+#' get a file to the cluster
+#' @param cl is the cluster object returned from \code{aws.clus.create} and friends
+#' @param src src file/path
+#' @param dest (defaults to $HOME)
+#' @details will send a file from your local end to the cluster
+#' @export
+aws.get <- function(cl, src, dest=NULL){
+    checkIfStarted()
+    if(is.null(dest)) dest <- "~/"
+    dest <- path.expand(normalizePath(dest))
+    dns <- isn(cl$MasterPublicDnsName)
+    trn <- infuse("scp  -r -i {{pathtopriv}} hadoop@{{dns}}:{{src}} {{dest}}", pathtopriv = aws.options()$pathtoprivkey, src=src,dns=dns, dest=dest)
+    print(trn)
+    system(trn)
+}
+
+
+
+#' 
 #' Waits for a script to run
 #' @param cl is the cluster object returned from \code{aws.clus.create} and friends
 #' @param s is the script id, which you will find in \code{aws.clus.info()$steps} (most recent first)
