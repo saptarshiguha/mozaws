@@ -1,4 +1,5 @@
 #!/bin/sh
+cd /home/hadoop
 wget -qO- https://get.haskellstack.org/ | sh
 
 git clone https://github.com/jgm/pandoc
