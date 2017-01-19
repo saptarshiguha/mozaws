@@ -24,6 +24,24 @@ library(colorout)
 library(Hmisc)
 options(width=200)
 
+
+theme_set( theme_bw()  %+replace% theme(axis.title = element_text(size=8) ,
+                                 axis.text.x  = element_text(angle=0, size=6),
+                                 axis.text.y  = element_text(angle=0, size=6),
+                                 strip.text.y = element_text(size =8,angle=90,lineheight=0.8),
+                                 plot.title = element_text(lineheight=.8,size=9),
+                                 panel.margin = unit(0.1,"cm")
+                                 ))
+lattice.options(default.theme = standard.theme(color = FALSE))
+a <-  custom.theme.2()
+a$superpose.polygon$col <- c(brewer.pal(9,"Set1"))
+a$superpose.symbol$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
+a$superpose.line$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
+a$strip.background <- list( alpha = 1, col =  c(brewer.pal(8,"Paired")))
+lattice.options(default.theme =a)
+rm(a)
+
+
 dtbinder <-  expression(
     pre = { .c = NULL },
     reduce = {
