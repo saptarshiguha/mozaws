@@ -5,7 +5,7 @@ git clone https://github.com/jgm/pandoc
 cd pandoc
 git submodule update --init 
 
-stack setup
-stack install --test
+/usr/local/bin/stack setup
+/usr/local/bin/stack install --test
 echo "export PATH=\$PATH:\$HOME/.local/bin" >> ~/.bash_profile
 
