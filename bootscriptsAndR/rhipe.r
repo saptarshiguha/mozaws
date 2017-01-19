@@ -75,6 +75,9 @@ Use $join() to join an asynchronous job, $output to get the output location, and
 rh <- function(src,setups){
     function(...){
         l <- list(...)
+        if(!is.null(l$take)){
+                  return( rhread(src, max=l$take))
+         }
         if(is.null(l$input)) l$input <- src
         if(is.null(l$setup)) l$setup <- setups
         if(is.null(l$reduce)) l$reduce <-  rhoptions()$tem$colsummer
