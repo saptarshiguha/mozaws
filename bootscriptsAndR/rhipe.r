@@ -90,13 +90,14 @@ print.sparky <- function(l){
     pN <- function(s) prettyNum(s,big.mark=",",scientific=FALSE,preserve.width="none")
     inpRec <- tryCatch(pN(x$counters$`Map-Reduce Framework`['Map input records',][[1]]),error=function(e) "")
     oupRec <- tryCatch(pN(x$counters$`Map-Reduce Framework`['Reduce output records',][[1]]),error=function(e) "")
+    oupMap <- tryCatch(pN(x$counters$`Map-Reduce Framework`['Map output records',][[1]]),error=function(e) "")
     oupsize <- tryCatch(pN(x$counters$`File Output Format Counters `['Bytes Written',][[1]]),error=function(e) "")
     ifo <- paste(l[[2]]$lines$rhipe_input_folder,collapse=":")
     ifo <-sprintf( "%s ...",substr(ifo,1, min(100,nchar(ifo))))
     lfo <- l[[2]]$lines$rhipe_output_folder
-    cat(paste(strwrap(sprintf("Job read from %s, wrote to %s, input records where %s and wrote %s records occupying %s bytes.
+    cat(sprintf("%s\n",paste(strwrap(sprintf("Job read from %s, wrote to %s, input records where %s and wrote %s map records and %s reduce records occupying %s bytes.
 Use $join() to join an asynchronous job, $output to get the output location, and $collect() to get results\n\n",
-            ifo, lfo, inpRec, oupRec, oupsize),width=120),collapse="\n"))
+            ifo, lfo, inpRec, oupMap, oupRec, oupsize),width=120),collapse="\n")))
 }
 
 rh <- function(src,setups){
