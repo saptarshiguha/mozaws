@@ -33,13 +33,14 @@ theme_set( theme_bw()  %+replace% theme(axis.title = element_text(size=8) ,
                                  panel.margin = unit(0.1,"cm")
                                  ))
 lattice.options(default.theme = standard.theme(color = FALSE))
-#a <-  custom.theme.2()
-#a$superpose.polygon$col <- c(brewer.pal(9,"Set1"))
-#a$superpose.symbol$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
-#a$superpose.line$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
-#a$strip.background <- list( alpha = 1, col =  c(brewer.pal(8,"Paired")))
-#lattice.options(default.theme =a)
-#rm(a)
+library(latticeExtra)
+a <-  custom.theme.2()
+a$superpose.polygon$col <- c(brewer.pal(9,"Set1"))
+a$superpose.symbol$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
+a$superpose.line$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
+a$strip.background <- list( alpha = 1, col =  c(brewer.pal(8,"Paired")))
+lattice.options(default.theme =a)
+rm(a)
 
 
 dtbinder <-  expression(
