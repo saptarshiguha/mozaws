@@ -88,9 +88,9 @@ rsp <- function(o,cnames=NULL,r=NA){
 print.sparky <- function(l){
     x <- l[[1]]
     pN <- function(s) prettyNum(s,big.mark=",",scientific=FALSE,preserve.width="none")
-    inpRec <- pN(x$counters$`Map-Reduce Framework`['Map input records',][[1]])
-    oupRec <- pN(x$counters$`Map-Reduce Framework`['Reduce output records',][[1]])
-    oupsize <- pN(x$counters$`File Output Format Counters `['Bytes Written',][[1]])
+    inpRec <- tryCatch(pN(x$counters$`Map-Reduce Framework`['Map input records',][[1]]),error=function(e) "")
+    oupRec <- tryCatch(pN(x$counters$`Map-Reduce Framework`['Reduce output records',][[1]]),error=function(e) "")
+    oupsize <- tryCatch(pN(x$counters$`File Output Format Counters `['Bytes Written',][[1]]),error=function(e) "")
     ifo <- paste(l[[2]]$lines$rhipe_input_folder,collapse=":")
     ifo <-sprintf( "%s ...",substr(ifo,1, min(100,nchar(ifo))))
     lfo <- l[[2]]$lines$rhipe_output_folder
