@@ -42,6 +42,14 @@ a$strip.background <- list( alpha = 1, col =  c(brewer.pal(8,"Paired")))
 lattice.options(default.theme =a)
 rm(a)
 
+CS <- rhoptions()$tem$colsummer
+E <- expression({
+    suppressPackageStartupMessages(library(data.table))
+    suppressPackageStartupMessages(library(Hmisc))
+    suppressPackageStartupMessages(library(rjson))
+})
+isn <- function(x,r=NA) if(is.null(x) || length(x)==0) r else x
+
 
 dtbinder <-  expression(
     pre = { .c = NULL },
