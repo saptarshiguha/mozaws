@@ -37,3 +37,4 @@ cd /home/hadoop
 wget https://raw.githubusercontent.com/saptarshiguha/mozaws/master/bootscriptsAndR/monitor.sh
 
 
+sudo yum -y install curl-devel
