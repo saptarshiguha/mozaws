@@ -81,17 +81,16 @@ dtbinder <- function (r = NULL, combine = TRUE, dfname = "adata")
 
 
 
-
 rsp <- function(o,cnames=NULL,r=NA){
           ## converts key-value pairs from HAdoop MApReduce Jobs to data tables
-    fixup <- function(s,r=r) if(is.null(s) || length(s)==0) r else s
+    fixup <- function(s,r) if(is.null(s) || length(s)==0) r else s
     x <- o[[1]]
     k <- x[[1]];v <- x[[2]]
     if( is(k, "list") && length(k)>=1){
         ## key is list with names (presumably) nd these form columns
         m <- list()
         for(i in 1:length(k)){
-            m[[ length(m) +1 ]] <- unlist(lapply(o,function(s){ fixup(s[[1]][[i]]) }))
+            m[[ length(m) +1 ]] <- unlist(lapply(o,function(s){ fixup(s[[1]][[i]],r) }))
         }
         p1 <- do.call(data.table,m)
     }else stop("key should be a list")
@@ -101,8 +100,11 @@ rsp <- function(o,cnames=NULL,r=NA){
               data.table(do.call(rbind,lapply(o,function(s) s[[2]])))
           }
     x <- cbind(p1,p2)
-    if(!is.null(cnames))  setnames(x,cnames)                                           
+    if(!is.null(cnames))  setnames(x,cnames)
 }
+
+
+
    
 print.sparky <- function(l){
     x <- l[[1]]
