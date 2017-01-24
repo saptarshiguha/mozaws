@@ -33,37 +33,64 @@ theme_set( theme_bw()  %+replace% theme(axis.title = element_text(size=8) ,
                                  panel.margin = unit(0.1,"cm")
                                  ))
 lattice.options(default.theme = standard.theme(color = FALSE))
-#a <-  custom.theme.2()
-#a$superpose.polygon$col <- c(brewer.pal(9,"Set1"))
-#a$superpose.symbol$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
-#a$superpose.line$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
-#a$strip.background <- list( alpha = 1, col =  c(brewer.pal(8,"Paired")))
-#lattice.options(default.theme =a)
-#rm(a)
+library(latticeExtra)
+a <-  custom.theme.2()
+a$superpose.polygon$col <- c(brewer.pal(9,"Set1"))
+a$superpose.symbol$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
+a$superpose.line$col <- c(brewer.pal(9,"Set1")) #length(a$strip.background$col)
+a$strip.background <- list( alpha = 1, col =  c(brewer.pal(8,"Paired")))
+lattice.options(default.theme =a)
+rm(a)
 
+CS <- rhoptions()$tem$colsummer
+E <- expression({
+    suppressPackageStartupMessages(library(data.table))
+    suppressPackageStartupMessages(library(Hmisc))
+    suppressPackageStartupMessages(library(rjson))
+})
+isn <- function(x,r=NA) if(is.null(x) || length(x)==0) r else x
 
-dtbinder <-  expression(
-    pre = { .c = NULL },
-    reduce = {
-        .c <- rbind(.c,rbindlist(reduce.values))
-    },
-    post = {
-        rhcollect(reduce.key, .c)
-    })
-attr(dtbinder,"combine") <- TRUE
+dtbinder <- function (r = NULL, combine = TRUE, dfname = "adata")
+{
+    ..r <- substitute(r)
+    r <- if (is(..r, "name"))
+        get(as.character(..r))
+    else ..r
+    def <- if (is.null(r))
+        TRUE
+    else FALSE
+    r <- if (is.null(r))
+        substitute({
+            rhcollect(reduce.key, adata)
+        })
+    else r
+    y <- bquote(expression(pre = {
+        adata <- NULL
+    }, reduce = {
+        adata <- rbind(adata,rbindlist(reduce.values))
+    }, post = {
+        .(P)
+    }), list(P = r))
+    y <- if (combine || def)
+        structure(y, combine = TRUE)
+    else y
+    environment(y) <- .BaseNamespaceEnv
+    y
+}
+
 
 
 
 rsp <- function(o,cnames=NULL,r=NA){
           ## converts key-value pairs from HAdoop MApReduce Jobs to data tables
-    fixup <- function(s,r=r) if(is.null(s) || length(s)==0) r else s
+    fixup <- function(s,r) if(is.null(s) || length(s)==0) r else s
     x <- o[[1]]
     k <- x[[1]];v <- x[[2]]
     if( is(k, "list") && length(k)>=1){
         ## key is list with names (presumably) nd these form columns
         m <- list()
         for(i in 1:length(k)){
-            m[[ length(m) +1 ]] <- unlist(lapply(o,function(s){ fixup(s[[1]][[i]]) }))
+            m[[ length(m) +1 ]] <- unlist(lapply(o,function(s){ fixup(s[[1]][[i]],r) }))
         }
         p1 <- do.call(data.table,m)
     }else stop("key should be a list")
@@ -73,21 +100,25 @@ rsp <- function(o,cnames=NULL,r=NA){
               data.table(do.call(rbind,lapply(o,function(s) s[[2]])))
           }
     x <- cbind(p1,p2)
-    if(!is.null(cnames))  setnames(x,cnames)                                           
+    if(!is.null(cnames))  setnames(x,cnames)
 }
+
+
+
    
 print.sparky <- function(l){
     x <- l[[1]]
     pN <- function(s) prettyNum(s,big.mark=",",scientific=FALSE,preserve.width="none")
-    inpRec <- pN(x$counters$`Map-Reduce Framework`['Map input records',][[1]])
-    oupRec <- pN(x$counters$`Map-Reduce Framework`['Reduce output records',][[1]])
-    oupsize <- pN(x$counters$`File Output Format Counters `['Bytes Written',][[1]])
+    inpRec <- tryCatch(pN(x$counters$`Map-Reduce Framework`['Map input records',][[1]]),error=function(e) "0")
+    oupRec <- tryCatch(pN(x$counters$`Map-Reduce Framework`['Reduce output records',][[1]]),error=function(e) "0")
+    oupMap <- tryCatch(pN(x$counters$`Map-Reduce Framework`['Map output records',][[1]]),error=function(e) "0")
+    oupsize <- tryCatch(pN(x$counters$`File Output Format Counters `['Bytes Written',][[1]]),error=function(e) "0")
     ifo <- paste(l[[2]]$lines$rhipe_input_folder,collapse=":")
     ifo <-sprintf( "%s ...",substr(ifo,1, min(100,nchar(ifo))))
     lfo <- l[[2]]$lines$rhipe_output_folder
-    cat(paste(strwrap(sprintf("Job read from %s, wrote to %s, input records where %s and wrote %s records occupying %s bytes.
+    cat(sprintf("%s\n",paste(strwrap(sprintf("Job read from %s, wrote to %s, input records where %s and wrote %s map records and %s reduce records occupying %s bytes.
 Use $join() to join an asynchronous job, $output to get the output location, and $collect() to get results\n\n",
-            ifo, lfo, inpRec, oupRec, oupsize),width=120),collapse="\n"))
+            ifo, lfo, inpRec, oupMap, oupRec, oupsize),width=120),collapse="\n")))
 }
 
 rh <- function(src,setups){
