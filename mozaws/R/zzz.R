@@ -1,14 +1,15 @@
-library(devtools)
+xlibrary(devtools)
 library(rjson)
 library(data.table)
 library(infuser)
 if(!packageVersion("infuser")>="0.2") stop("Higher Version Required")
 
+## see https://github.com/mozilla/telemetry-analysis-service/pull/156/commits/0226f72f0c5dfb01fa7781a1cf026d6d7b927d54
 .onLoad <- function(libname, pkgname) {
     options(mzaws=list(
                 init       = FALSE,
                 awscli     = "aws",
-                releaselabel = "emr-4.3.0" ,
+                releaselabel = "emr-5.2.1" ,
                 timeout    = "2880",
                 refreshBeforePrint = TRUE,
             loguri     = NA,

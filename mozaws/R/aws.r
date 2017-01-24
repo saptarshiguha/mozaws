@@ -310,11 +310,15 @@ aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
     checkIfStarted()
     if(!is(clusters,"awsCluster")) stop("cluster must be of class awsCluster")
     ac <- clusters
-    acid <-  ac$Id
-    while(TRUE){
+    acid <-  ac$Id; retry <- 1
+    while(retry){
         temp <- infuse("{{awscli}} emr describe-cluster --cluster-id {{id}} --output text --query 'Cluster.Status.State'"
                       ,awscli=awsOpts$awscli,id=acid)
-        res <- system(temp, intern=TRUE)
+        res <- tryCatch(system(temp, intern=TRUE),error=function(e) NA)
+        if(length(res)==0 || is.na(res)){
+            mon.sec <- (mon.sec*2);retry <- retry+1
+            cat(sprintf("Throttled, changing mon.sec to %s seconds\n", mon.sec))
+        }
         if(!(res %in% c("STARTING","BOOTSTRAPPING","RUNNING"))){ cat("\n"); break}
         if(!silent){cat(".")}
         Sys.sleep(mon.sec)
