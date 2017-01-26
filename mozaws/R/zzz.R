@@ -1,4 +1,4 @@
-xlibrary(devtools)
+library(devtools)
 library(rjson)
 library(data.table)
 library(infuser)
