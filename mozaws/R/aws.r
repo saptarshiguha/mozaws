@@ -318,8 +318,7 @@ aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
         if(length(res)==0 || is.na(res)){
             mon.sec <- (mon.sec*2);retry <- retry+1
             cat(sprintf("Throttled, changing mon.sec to %s seconds\n", mon.sec))
-        }
-        if(!(res %in% c("STARTING","BOOTSTRAPPING","RUNNING"))){ cat("\n"); break}
+        } else  if(!(res %in% c("STARTING","BOOTSTRAPPING","RUNNING"))){ cat("\n"); break}
         if(!silent){cat(".")}
         Sys.sleep(mon.sec)
     }
