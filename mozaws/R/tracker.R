@@ -212,7 +212,7 @@ monitorCurrentSparkApplication <- function(cl,port=4040, mon.sec=5){
         }
     })
                 
-    ssh <- sprintf("ssh hadoop@%s",cl$MasterPublicDnsName)
+    ssh <- sprintf("ssh -i %s hadoop@%s",aws.options()$pathtoprivkey,cl$MasterPublicDnsName)
     appid <- getAppId(ssh,port)
     nr <- 0
     orig_width <- getOption("width")
