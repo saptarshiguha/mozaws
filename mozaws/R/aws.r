@@ -456,7 +456,7 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     r <- mozaws:::presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
          if(isn(r$Step$Status$State,"") %in% c("FAILED","COMPLETED")){
             ss <- r$Step$Status$State
-            if(ss=="FAILED") stop(sprintf("The step (id:%s name:%s) failed. View logs on the remote at /mnt/var/log/hadoop/steps/%s",r$Step$Id,r$Step$Name,r$Step$Id))
+            if(ss=="FAILED" || ss=='CANCELLED') stop(sprintf("The step (id:%s name:%s) failed. View logs on the remote at /mnt/var/log/hadoop/steps/%s",r$Step$Id,r$Step$Name,r$Step$Id))
             break
         }
         cat(".")
