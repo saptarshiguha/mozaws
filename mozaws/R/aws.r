@@ -294,6 +294,23 @@ aws.kill <- function(clusters){
     system(template,intern=TRUE)
 }
 
+
+ExPoWait <- function(cmd, BREAK,mon.sec,access,silent=FALSE){
+    retry <- 1
+    while(retry<100){
+        res <- tryCatch(presult(system(cmd, intern=TRUE)),error=function(e) NA)
+        if(length(res)==0 || is.na(res)){
+            mon.sec <- (mon.sec*2);retry <- retry+1
+            cat(sprintf("Throttled, changing mon.sec to %s seconds\n", mon.sec))
+        } else  if(grepl(BREAK, access(res))){ cat("\n"); break}
+        if(!silent){cat(".")}
+        Sys.sleep(mon.sec)
+    }
+    res
+}
+
+
+
 #' Waits for the cluster to start
 #' @param clusters is an object obtained from \code{aws.clus.create}
 #' @param mon.sec polling interval
@@ -326,6 +343,7 @@ aws.clus.wait <- function(clusters,mon.sec=5,silent=FALSE){
 }
 
 #' Describes the cluster
+#'
 #' @param cl is what is returned from \code{aws.clus.create} or \code{aws.clus.wait}
 #' @return an object of awsCluster. Very detailed object. Save it.
 #' @export
@@ -451,15 +469,12 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     awsOpts <- aws.options()
     checkIfStarted()
     if(!is(cl,"awsCluster")) stop("cluster must be of class awsCluster")
-    while(TRUE){
-    r <- mozaws:::presult(system(infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s),intern=TRUE))
-         if(isn(r$Step$Status$State,"") %in% c("FAILED","COMPLETED")){
+    cmd <- infuse("{{awscli}} emr describe-step --cluster-id {{ cid}} --step-id {{sid}}",awscli=awsOpts$awscli, cid=cl$Id, sid=s)
+    r <- ExPoWait(cmd, BREAK="(FAILED|COMPLETED)",mon.sec=mon.sec,access=function(x) x$Step$Status$State)
+    if(isn(r$Step$Status$State,"") %in% c("FAILED","COMPLETED")){
             ss <- r$Step$Status$State
             if(ss=="FAILED" || ss=='CANCELLED') stop(sprintf("The step (id:%s name:%s) failed. View logs on the remote at /mnt/var/log/hadoop/steps/%s",r$Step$Id,r$Step$Name,r$Step$Id))
             break
-        }
-        cat(".")
-        if(verb) Sys.sleep(mon.sec)
     }
     return(aws.clus.info(cl))
 }
