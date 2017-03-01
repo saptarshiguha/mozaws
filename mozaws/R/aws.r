@@ -474,7 +474,6 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
     if(isn(r$Step$Status$State,"") %in% c("FAILED","COMPLETED")){
             ss <- r$Step$Status$State
             if(ss=="FAILED" || ss=='CANCELLED') stop(sprintf("The step (id:%s name:%s) failed. View logs on the remote at /mnt/var/log/hadoop/steps/%s",r$Step$Id,r$Step$Name,r$Step$Id))
-            break
     }
     return(aws.clus.info(cl))
 }
