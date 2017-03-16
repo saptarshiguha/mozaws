@@ -299,8 +299,9 @@ ExPoWait <- function(cmd, BREAK,mon.sec,access,silent=FALSE){
     retry <- 1
     while(retry<100){
         res <- tryCatch(presult(system(cmd, intern=TRUE)),error=function(e) NA)
+        sleepwait=mon.sec
         if(length(res)==0 || is.na(res)){
-            mon.sec <- (mon.sec*2);retry <- retry+1
+            sleepwait <- (sleepwait*2);retry <- retry+1
             cat(sprintf("Throttled, changing mon.sec to %s seconds\n", mon.sec))
         } else  if(grepl(BREAK, access(res))){ cat("\n"); break}
         if(!silent){cat(".")}
@@ -482,7 +483,7 @@ aws.step.wait <- function(cl, s,verb=TRUE,mon.sec=5){
 #' @param cl is a cluster object returned by \code{aws.clus.create} and friends
 #' @param script is a URL (not a file name!, something like http://) to download and run. E.g. an Rscript file
 #' @param args arguments(character array) that are passed to the script (names will not be passed, so this is positional arguments)
-#' @param wait is TRUE, will wait for result else a return a list with cluster object and the step id
+#' @param wait if positive will wait and pass the wait 'wait' mon.sec, will wait for result else a return a list with cluster object and the step id
 #' @export
 aws.step.run <- function(cl,script,name=NULL,args=NULL,wait=TRUE){
      awsOpts <- aws.options()
@@ -495,7 +496,7 @@ aws.step.run <- function(cl,script,name=NULL,args=NULL,wait=TRUE){
     x <- presult( system(temp,intern=TRUE))$StepIds
     cl <- aws.clus.info(cl)
     message(sprintf("Running step with Id (see logs at /mnt/var/log/hadoop/steps/%s) : %s", x,x))
-    if(wait) aws.step.wait(cl,x) else list(cl, x)
+    if(wait) aws.step.wait(cl,x,verb=TRUE,mon.sec=wait) else list(cl, x)
 }
 
 
