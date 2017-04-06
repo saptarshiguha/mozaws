@@ -208,16 +208,10 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
         customscript <-  makeNiceString(steps,awsOpts)
     }else customscript=""
     otherbs <- if(!is.null(bsactions)) makeNiceBS(bsactions)
-    ## if(spark==TRUE){
-    ##     ## sparkb <- infuse("Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}','--email,{{emz}}','--efs-dns,fs-d0c30f79.efs.us-west-2.amazonaws.com']", pubkey = awsOpts$localpubkey,timeout=awsOpts$timeout,emz=if(!is.null(awsOpts$user)) awsOpts$user else "")
-    ##     sparkb <- infuse("Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}','--email,{{emz}}']", pubkey = awsOpts$localpubkey,timeout=awsOpts$timeout,emz=if(!is.null(awsOpts$user)) awsOpts$user else "")
-
-    ## }else sparkb <- ""
     if(length(applications)>0){
         applications = sprintf("--applications %s",paste("Name=", applications,sep="",collapse= " "))
     }else applications=""
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
-    sparkmoz <- ""
     if(enableDebug) dodebug <- "--enable-debugging" else dodebug <- ""
     
     ec2bits <- sprintf("--ec2-attributes %s",paste(c(infuse("KeyName='{{ec2key}}'", ec2key=awsOpts$ec2key),awsOpts[["ec2attributes"]]),collapse=","))
