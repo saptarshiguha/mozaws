@@ -139,7 +139,7 @@ makeNiceBS <- function(s, ...){
                    }, names(k), k,SIMPLIFY=FALSE)),collapse=",")
             args <- sprintf(",Args=[%s]",args)
         }
-        x <- c(x,infuse("Path={{path}},Name='{{an}}'{{args}}", path=s[[i]][[1]],an=an,args=args))
+        x <- c(x,infuse("Path='{{path}}',Name='{{an}}'{{args}}", path=s[[i]][[1]],an=an,args=args))
         j <- j+1
     }
     paste(x,collapse=" ")
@@ -155,9 +155,7 @@ makeNiceBS <- function(s, ...){
 #' @param steps a list of character vector of EMR 'steps' to run. These could be shell files which are downloaded and executed (see \code{aws.step.run}). The format is a named vector.
 #' @param bsactions a character vector of bootstrap actions formatted according to \code{aws emr create-cluster help}
 #' @param wait TRUE or FALSE for waiting. If FALSE, the function returns immediately or waits
-#' @param spark TRUE or FALSE will install Mozilla's Telemetry libraries
 #' @param applications one or more of  Hadoop, Spark, Hue, Hive, Pig, HBase, Ganglia and Impala (default Hadoop and Spark)
-#' @param spark TRUE or FALSE install spark, but will not install Mozilla's Telemetry libraries. If equal to "mozilla" will install Mozilla's libraries.
 #' @param enableDebug TRUE or FALSE(FALSE), turns on hadoop debugging
 #' @param spotForCore if NULL(default) uses on demand nodes for core. Otherwise the value is the bid price. If set to NA, then a bid price is chosen for you.
 #' @param opts list of options to modify string. Mysterious
@@ -180,7 +178,7 @@ makeNiceBS <- function(s, ...){
 #' }
 #' @export
 aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,timeout=NULL,verbose=FALSE,emrfs=FALSE
-                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Spark","Hive")
+                           ,steps=NULL,bsactions=NULL,wait=TRUE,spark=FALSE,enableDebug=FALSE,applications=c("Spark","Hive","Zeppelin","Hadoop")
                            ,spotForCore=NULL
                            ,opts=NULL){
     awsOpts <- aws.options()
@@ -210,9 +208,11 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
         customscript <-  makeNiceString(steps,awsOpts)
     }else customscript=""
     otherbs <- if(!is.null(bsactions)) makeNiceBS(bsactions)
-    if(spark==TRUE){
-        sparkb <- infuse("Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}','--email,{{emz}}','--efs-dns,fs-616ca0c8.efs.us-west-2.amazonaws.com']", pubkey = awsOpts$localpubkey,timeout=awsOpts$timeout,emz=if(!is.null(awsOpts$user)) awsOpts$user else "")
-    }else sparkb <- ""
+    ## if(spark==TRUE){
+    ##     ## sparkb <- infuse("Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}','--email,{{emz}}','--efs-dns,fs-d0c30f79.efs.us-west-2.amazonaws.com']", pubkey = awsOpts$localpubkey,timeout=awsOpts$timeout,emz=if(!is.null(awsOpts$user)) awsOpts$user else "")
+    ##     sparkb <- infuse("Path='s3://telemetry-spark-emr-2/bootstrap/telemetry.sh',Args=['--public-key,{{pubkey}}','--timeout,{{timeout}}','--email,{{emz}}']", pubkey = awsOpts$localpubkey,timeout=awsOpts$timeout,emz=if(!is.null(awsOpts$user)) awsOpts$user else "")
+
+    ## }else sparkb <- ""
     if(length(applications)>0){
         applications = sprintf("--applications %s",paste("Name=", applications,sep="",collapse= " "))
     }else applications=""
@@ -247,10 +247,10 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
         core.txt <- infuse("InstanceGroupType=CORE,InstanceCount={{numworkers}},InstanceType={{workertype}},BidPrice={{bp}}", numworkers=  workers[[1]], workertype = workers[[2]] , bp = as.character(round(spotBid, 3)))
     }
     args <- list(awscli = awsOpts$awscli, releaselabel=awsOpts$releaselabel,loguri=awsOpts$loguri,otherbs=otherbs,ec2bits=ec2bits
-                ,name=name,mastertype=master[[2]], numworkers=workers[[1]],spark=sparkb
+                ,name=name,mastertype=master[[2]], numworkers=workers[[1]]
                 ,workertype=workers[[2]],hadoopargs=hadoopargs,tags=xtags,configfile=configfile,applications=applications
                 ,emrfs=emrfs,customscript=customscript,s3buk=awsOpts$s3bucket, configfile=configfile,coretxt=core.txt)
-    template = "{{awscli}} emr create-cluster {{configfile}} {{applications}} --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --release-label '{{releaselabel}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  {{coretxt}}  --bootstrap-actions  {{spark}} {{otherbs}}  {{customscript}}"
+    template = "{{awscli}} emr create-cluster {{configfile}} {{applications}} --service-role EMR_DefaultRole  {{emrfs}} {{tags}} --visible-to-all-users  --release-label '{{releaselabel}}' --log-uri '{{loguri}}'  --name '{{name}}' --enable-debugging  {{ec2bits}}   --instance-groups InstanceGroupType=MASTER,InstanceCount=1,InstanceType={{mastertype}}  {{coretxt}}  --bootstrap-actions {{otherbs}}  {{customscript}}"
 
     template <- infuse(template, args)
     if(verbose) cat(sprintf("%s\n",template))

@@ -93,9 +93,6 @@ And a spark cluster? This just installs Spark and you can write python Spark job
 
 These clusters will not have RHIPE on them. For that we have another step. See the file _kickstartrhipe.sh_ for what is bootstrapped.
 
-### For the Mozilla Metrics Team
-
-Please see [this blog post](LINK) for a description.
 
 
 ## Describe the Cluster
