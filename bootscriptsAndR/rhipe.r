@@ -135,12 +135,13 @@ rh <- function(src,setups){
         o <- r[[2]]$lines$rhipe_output_folder
         col <- function() rhread(r[[2]]$lines$rhipe_output_folder)
         take = function(n=1) rhread(r[[2]]$lines$rhipe_output_folder,max=n)
+        count = function() rhwatch(map=function(a,b) rhcollect(1,1), reduce=rhoptions()$tem$colsummer,input=o)
         class(r) <- c(class(r),"sparky")
         list(result=r, join=function(mon.sec=10){
             s <- list(rhstatus(r,mon.sec=mon.sec),r[[2]])
             class(s) <- c(class(s),"sparky")
             list(result=s,output=o, join=function() NULL,collect=col,input=src)
-        } ,output=o, input=src,collect=col,take=take)
+        } ,output=o, input=src,collect=col,take=take,count=count)
     }
 }
 
