@@ -42,41 +42,6 @@ a$strip.background <- list( alpha = 1, col =  c(brewer.pal(8,"Paired")))
 lattice.options(default.theme =a)
 rm(a)
 
-CS <- rhoptions()$tem$colsummer
-E <- expression({
-    suppressPackageStartupMessages(library(data.table))
-    suppressPackageStartupMessages(library(Hmisc))
-    suppressPackageStartupMessages(library(rjson))
-})
-isn <- function(x,r=NA) if(is.null(x) || length(x)==0) r else x
-
-dtbinder <- function (r = NULL, combine = TRUE, dfname = "adata")
-{
-    ..r <- substitute(r)
-    r <- if (is(..r, "name"))
-        get(as.character(..r))
-    else ..r
-    def <- if (is.null(r))
-        TRUE
-    else FALSE
-    r <- if (is.null(r))
-        substitute({
-            rhcollect(reduce.key, adata)
-        })
-    else r
-    y <- bquote(expression(pre = {
-        adata <- NULL
-    }, reduce = {
-        adata <- rbind(adata,rbindlist(reduce.values))
-    }, post = {
-        .(P)
-    }), list(P = r))
-    y <- if (combine || def)
-        structure(y, combine = TRUE)
-    else y
-    environment(y) <- .BaseNamespaceEnv
-    y
-}
 
 
 
@@ -146,5 +111,43 @@ rh <- function(src,setups){
 }
 
 
-                                              
+dtbinder = function (r = NULL, combine = TRUE)
+{
+    ..r <- substitute(r)
+    r <- if (is(..r, "name"))
+        get(as.character(..r))
+    else ..r
+    def <- if (is.null(r))
+        TRUE
+    else FALSE
+    r <- if (is.null(r))
+        substitute({
+            rhcollect(reduce.key, adata)
+        })
+    else r
+    y <- bquote(expression(pre = {
+        .r <- NULL
+    }, reduce = {
+         .r <- rbind(.r,rbindlist(reduce.values))
+    }, post = {
+        .(P)
+    }), list(P = r))
+    y <- if (combine || def)
+        structure(y, combine = TRUE)
+    else y
+    environment(y) <- .BaseNamespaceEnv
+    y
+}
+
+CS <- rhoptions()$tem$colsummer
+E <- expression({
+    suppressPackageStartupMessages(library(data.table))
+    suppressPackageStartupMessages(library(Hmisc))
+    suppressPackageStartupMessages(library(rjson))
+})
+isn <- function(x,r=NA) if(is.null(x) || length(x)==0) r else x
+
+
+
 setwd("~/r")
+
