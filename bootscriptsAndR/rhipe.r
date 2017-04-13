@@ -122,7 +122,7 @@ dtbinder = function (r = NULL, combine = TRUE)
     else FALSE
     r <- if (is.null(r))
         substitute({
-            rhcollect(reduce.key, adata)
+            rhcollect(reduce.key, .r)
         })
     else r
     y <- bquote(expression(pre = {
