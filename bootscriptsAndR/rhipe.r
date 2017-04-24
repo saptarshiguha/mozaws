@@ -141,6 +141,7 @@ dtbinder = function (r = NULL, combine = TRUE)
 
 CS <- rhoptions()$tem$colsummer
 E <- expression({
+          set.seed(20)
     suppressPackageStartupMessages(library(data.table))
     suppressPackageStartupMessages(library(Hmisc))
     suppressPackageStartupMessages(library(rjson))
