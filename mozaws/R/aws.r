@@ -401,7 +401,7 @@ Reason      : {{changereason}}
 Started At  : {{started}}
 Message     : {{currently}}
 IP          : {{dns}}
-SSH         : ssh hadoop@{{dns}} (assuming did aws.init(localpub=your-pub-key) \n\t else ssh -i {{pathtopriv}}  hadoop@{{dns}}
+SSH         : ssh hadoop@{{dns}} (assuming did aws.init(localpub=your-pub-key) \n\t else ssh -i {{pathtopriv}}  -R 9999:localhost:22 StrictHostKeyChecking=no hadoop@{{dns}}
 SOCKS       : ssh -ND 8157 hadoop@{{dns}} (and use FoxyProxy for Firefox or SwitchySharp for Chrome)
 JobTracker  : http://{{dns}}:9026 (needs a socks)
 Spark UI    : http://localhost:8888 but first run ssh -L 8888:localhost:8888 hadoop@{{dns}}
