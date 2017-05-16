@@ -223,7 +223,7 @@ aws.clus.create <- function(name=NULL, workers=NULL,master=NULL,hadoopops=NULL,t
         }else{
             rest=paste(unlist(mapply(function(n1,n2){ sprintf("'%s'='%s'",n1,n2)}, names(tags), tags,SIMPLIFY=FALSE)),collapse=" ")
         }
-        infuse("--tags Owner='{{uusser}}' crtr='rmozaws-1' {{rest}}",uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI")),rest=rest)
+        infuse("--tags Owner='{{uusser}}' --tags REAPER_SPARE_ME='true' crtr='rmozaws-1' {{rest}}",uusser=isn(awsOpts$user,isn(Sys.getenv("USERNAME"),"MysteriousI")),rest=rest)
     })
     if(!is.na(awsOpts$configfile)) configfile <- sprintf("--configurations %s" , awsOpts$configfile) else configfile <- ""
     
